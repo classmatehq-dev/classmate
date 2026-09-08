@@ -42,21 +42,21 @@ classmate/
 |---|------|--------|
 | 0 | Install Node, scaffold Next.js, brand/design system, app shell + nav | ✅ scaffold + brand + welcome page done; app shell/nav next |
 | 1 | DB schema (users, schools, teachers, classes, classMemberships, posts, comments, helpfulVotes, follows, reports, blocks) + migrations | ✅ schema + first migration generated; needs a DB to apply |
-| 2 | Auth bridge: Clerk + dev bypass, `getCurrentUser`, profile creation | pending |
-| 3 | Welcome / signup / login / email verify | pending |
-| 4 | School onboarding: `GET/POST /api/schools`, persist selection to profile | pending |
-| 5 | Class onboarding: `GET/POST /api/classes`, `GET /api/classes/:id`, `POST /api/classes/:id/join` | pending |
-| 6 | Membership persistence + `canUserJoinClass` entitlement stub | pending |
-| 7 | `GET /api/me/classes` | pending |
-| 8 | `GET /api/home/feed` | pending |
-| 9 | Home render: My Classes, feed, empty states | pending |
-| 10 | Class page + tabs (Posts live; others placeholder) | pending |
-| 11 | Posts: `GET/POST /api/classes/:id/posts`, `PATCH/DELETE /api/posts/:id` | pending |
-| 12 | Comments + replies: `GET/POST /api/posts/:id/comments`, `PATCH/DELETE /api/comments/:id` | pending |
-| 13 | Helpful votes: `POST /api/helpful` toggle, counts on posts/comments | pending |
-| 14 | Profiles: `GET /api/users/:username`, stats | pending |
-| 15 | Basic reporting: `POST /api/reports`, blocks | pending |
-| 16 | Mobile pass + multi-account permission testing | pending |
+| 2 | Auth bridge: Clerk + dev bypass, `getCurrentUser`, profile creation | ✅ |
+| 3 | Welcome / signup / login / email verify | ✅ (dev + Clerk both wired; Clerk needs keys — see docs/CLERK.md) |
+| 4 | School onboarding: `GET/POST /api/schools`, persist selection to profile | ✅ |
+| 5 | Class onboarding: `GET/POST /api/classes`, `GET /api/classes/:id`, `POST /api/classes/:id/join` | ✅ |
+| 6 | Membership persistence + `canUserJoinClass` entitlement stub | ✅ |
+| 7 | `GET /api/me/classes` | ✅ |
+| 8 | `GET /api/home/feed` | ✅ |
+| 9 | Home render: My Classes, feed, empty states | ✅ (+ Hot Today, notification bell) |
+| 10 | Class page + tabs (Posts live; others placeholder) | ✅ |
+| 11 | Posts: `GET/POST /api/classes/:id/posts`, `PATCH/DELETE /api/posts/:id` | ✅ |
+| 12 | Comments + replies: `GET/POST /api/posts/:id/comments`, `PATCH/DELETE /api/comments/:id` | ✅ |
+| 13 | Helpful votes: `POST /api/helpful` toggle, counts on posts/comments | ✅ |
+| 14 | Profiles: `GET /api/users/:username`, stats | ✅ (+ follow toggle) |
+| 15 | Basic reporting: `POST /api/reports`, blocks | ✅ reports (blocks: table only) |
+| 16 | Mobile pass + multi-account permission testing | ✅ verified in-browser |
 | 17 | Deploy to Vercel | pending |
 
 ## External accounts the user must create (guided)

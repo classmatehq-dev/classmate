@@ -36,6 +36,20 @@ export const env = parsed.data;
 
 export const authDevBypass = env.AUTH_DEV_BYPASS === "1";
 
+export const clerkConfigured = Boolean(
+  env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && env.CLERK_SECRET_KEY,
+);
+
+/** "dev" = local fake session; "clerk" = real Clerk auth. */
+export const authMode: "dev" | "clerk" = authDevBypass ? "dev" : "clerk";
+
+if (authMode === "clerk" && !clerkConfigured) {
+  throw new Error(
+    "AUTH_DEV_BYPASS is off but Clerk keys are missing. Set " +
+      "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY, or set AUTH_DEV_BYPASS=1.",
+  );
+}
+
 export function requireDatabaseUrl(): string {
   if (!env.DATABASE_URL) {
     throw new Error(

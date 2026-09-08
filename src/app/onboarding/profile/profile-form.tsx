@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -16,7 +15,7 @@ const GRADES: { value: GradeLevel; label: string }[] = [
   { value: "college", label: "College" },
 ];
 
-export function SignupForm() {
+export function ProfileForm() {
   const router = useRouter();
   const createProfile = useCreateProfile();
   const [username, setUsername] = useState("");
@@ -44,14 +43,14 @@ export function SignupForm() {
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-12">
       <div className="w-full max-w-sm">
-        <Link href="/" className="flex justify-center">
+        <div className="flex justify-center">
           <Logo size={48} />
-        </Link>
+        </div>
         <h1 className="mt-6 text-center text-2xl font-extrabold text-navy">
-          Create your account
+          Set up your profile
         </h1>
         <p className="mt-1 text-center text-sm text-muted">
-          Pick a username and your grade level to get started.
+          Pick a username and your grade level. You can change these later.
         </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
@@ -93,18 +92,6 @@ export function SignupForm() {
             {createProfile.isPending ? "Creating…" : "Continue"}
           </Button>
         </form>
-
-        <p className="mt-6 text-center text-sm text-muted">
-          Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-brand-blue">
-            Log in
-          </Link>
-        </p>
-
-        <p className="mt-4 text-center text-xs text-muted">
-          Dev mode: email &amp; password are skipped. Real sign-up is added with
-          Clerk.
-        </p>
       </div>
     </main>
   );

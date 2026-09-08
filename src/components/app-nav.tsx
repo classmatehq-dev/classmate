@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { AccountControl } from "@/components/account-control";
 import { Logo } from "@/components/logo";
 import { NotificationBell } from "@/components/notification-bell";
 import { cx } from "@/components/ui";
@@ -57,7 +58,13 @@ const items: Item[] = [
   },
 ];
 
-export function AppNav({ username }: { username: string }) {
+export function AppNav({
+  username,
+  authMode,
+}: {
+  username: string;
+  authMode: "dev" | "clerk";
+}) {
   const pathname = usePathname();
   const isActive = (href: string) =>
     href === "/profile"
@@ -87,6 +94,10 @@ export function AppNav({ username }: { username: string }) {
             {item.label}
           </Link>
         ))}
+
+        <div className="mt-auto px-3 pt-4">
+          <AccountControl authMode={authMode} />
+        </div>
       </nav>
 
       {/* Mobile top bar */}

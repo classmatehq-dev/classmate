@@ -27,7 +27,7 @@ export const updateProfileBody = z.object({
 export type UpdateProfileBody = z.infer<typeof updateProfileBody>;
 
 export const onboardingStepValue = z.enum([
-  "signup",
+  "profile",
   "school",
   "classes",
   "done",

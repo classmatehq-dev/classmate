@@ -32,10 +32,10 @@ export const getAuthContext = cache(
 // Onboarding state machine
 // ---------------------------------------------------------------------------
 
-export type OnboardingStep = "signup" | "school" | "classes" | "done";
+export type OnboardingStep = "profile" | "school" | "classes" | "done";
 
 export function onboardingStep(user: User | null): OnboardingStep {
-  if (!user) return "signup";
+  if (!user) return "profile";
   if (!user.onboardingSchoolId) return "school";
   if (!user.onboardingCompletedAt) return "classes";
   return "done";
@@ -43,8 +43,8 @@ export function onboardingStep(user: User | null): OnboardingStep {
 
 export function onboardingPath(step: OnboardingStep): string {
   switch (step) {
-    case "signup":
-      return "/signup";
+    case "profile":
+      return "/onboarding/profile";
     case "school":
       return "/onboarding/school";
     case "classes":

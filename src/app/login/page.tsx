@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { SignIn } from "@clerk/nextjs";
 
 import { Logo } from "@/components/logo";
 import { ButtonLink } from "@/components/ui";
+import { authMode } from "@/env";
 import {
   getAuthContext,
   onboardingPath,
@@ -10,7 +13,27 @@ import {
 import { DevAccountSwitcher } from "./dev-switcher";
 
 export default async function LoginPage() {
-  const { user } = await getAuthContext();
+  const { identity, user } = await getAuthContext();
+
+  if (authMode === "clerk") {
+    if (identity) redirect(onboardingPath(onboardingStep(user)));
+    return (
+      <main className="flex flex-1 flex-col items-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          <div className="mb-6 flex justify-center">
+            <Logo size={48} />
+          </div>
+          <SignIn
+            routing="hash"
+            signUpUrl="/signup"
+            forceRedirectUrl="/onboarding/profile"
+          />
+        </div>
+      </main>
+    );
+  }
+
+  // Dev mode
   const step = onboardingStep(user);
   const nextPath = onboardingPath(step);
 

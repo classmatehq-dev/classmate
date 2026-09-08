@@ -1,8 +1,25 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { Logo } from "@/components/logo";
+import { authMode } from "@/env";
+import {
+  getAuthContext,
+  onboardingPath,
+  onboardingStep,
+} from "@/server/auth/current-user";
 
-export default function WelcomePage() {
+export default async function WelcomePage() {
+  const { identity, user } = await getAuthContext();
+  // Has a profile → resume onboarding / go home.
+  if (user) redirect(onboardingPath(onboardingStep(user)));
+  // Signed into Clerk but no profile yet → make one.
+  if (identity && authMode === "clerk") redirect("/onboarding/profile");
+  // Dev mode with no profile, or a true guest → show the welcome screen.
+  return <Welcome />;
+}
+
+function Welcome() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm text-center">

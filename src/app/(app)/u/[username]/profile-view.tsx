@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { AccountControl } from "@/components/account-control";
 import { FeedPost } from "@/components/feed-post";
 import { ReportButton } from "@/components/report-button";
 import {
@@ -30,7 +31,13 @@ const GRADE_LABEL: Record<string, string> = {
   college: "College",
 };
 
-export function ProfileView({ username }: { username: string }) {
+export function ProfileView({
+  username,
+  authMode,
+}: {
+  username: string;
+  authMode: "dev" | "clerk";
+}) {
   const profile = useProfile(username);
   const posts = useProfilePosts(username);
   const follow = useToggleFollow(username);
@@ -142,11 +149,13 @@ export function ProfileView({ username }: { username: string }) {
           <Stat label="Following" value={p.followingCount} />
         </div>
 
-        {!p.isSelf && (
-          <div className="mt-3">
+        <div className="mt-3">
+          {p.isSelf ? (
+            <AccountControl authMode={authMode} />
+          ) : (
             <ReportButton targetType="profile" targetId={p.id} />
-          </div>
-        )}
+          )}
+        </div>
       </header>
 
       <div className="mt-3 flex gap-1 px-4 md:px-0">
