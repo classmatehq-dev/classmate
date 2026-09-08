@@ -1,7 +1,7 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-import { authDevBypass } from "@/env";
+import { authDevBypass, env } from "@/env";
 
 /**
  * Dev-bypass mode: pass-through (no real auth).
@@ -9,9 +9,11 @@ import { authDevBypass } from "@/env";
  * `auth()` / `currentUser()` read in server code. Route protection itself lives
  * in the page/route guards, not here.
  */
-export const proxy = authDevBypass
-  ? () => NextResponse.next()
-  : clerkMiddleware();
+export default authDevBypass
+  ? function middleware() {
+      return NextResponse.next();
+    }
+  : clerkMiddleware({ clockSkewInMs: env.CLERK_CLOCK_SKEW_MS });
 
 export const config = {
   matcher: [

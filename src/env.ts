@@ -20,6 +20,11 @@ const schema = z.object({
     .default("0"),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().optional(),
   CLERK_SECRET_KEY: z.string().optional(),
+
+  // Allowed clock difference (ms) between this machine and Clerk's servers when
+  // verifying session tokens. Clerk's default is 5000. Bump this locally if your
+  // machine clock drifts; on a correctly-timed server the default is fine.
+  CLERK_CLOCK_SKEW_MS: z.coerce.number().int().min(0).max(3_600_000).default(5000),
 });
 
 const parsed = schema.safeParse(process.env);
