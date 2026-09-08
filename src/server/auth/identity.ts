@@ -25,16 +25,20 @@ export async function getAuthIdentity(): Promise<AuthIdentity | null> {
     return { clerkUserId: id, email: `${id}@classmate.local` };
   }
 
-  // Clerk path — imported lazily so the dev-bypass build never loads it.
   const { auth, currentUser } = await import("@clerk/nextjs/server");
   const { userId } = await auth();
   if (!userId) return null;
 
-  const clerkUser = await currentUser();
-  const email =
-    clerkUser?.primaryEmailAddress?.emailAddress ??
-    clerkUser?.emailAddresses?.[0]?.emailAddress ??
-    "";
+  let email = "";
+  try {
+    const clerkUser = await currentUser();
+    email =
+      clerkUser?.primaryEmailAddress?.emailAddress ??
+      clerkUser?.emailAddresses?.[0]?.emailAddress ??
+      "";
+  } catch {
+    // Backend API hiccup — still return the identity; email can be backfilled.
+  }
 
   return { clerkUserId: userId, email };
 }
