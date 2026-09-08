@@ -15,7 +15,7 @@ type MiddlewareFn = (
 
 let clerkHandler: MiddlewareFn | undefined;
 
-export default async function middleware(req: Request, evt: unknown) {
+export async function proxy(req: Request, evt: unknown) {
   if (authDevBypass) return NextResponse.next();
   if (!clerkHandler) {
     const { clerkMiddleware } = await import("@clerk/nextjs/server");
