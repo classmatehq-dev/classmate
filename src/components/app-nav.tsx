@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Logo } from "@/components/logo";
+import { NotificationBell } from "@/components/notification-bell";
 import { cx } from "@/components/ui";
 
 type Item = {
@@ -91,6 +92,7 @@ export function AppNav({ username }: { username: string }) {
       {/* Mobile top bar */}
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface/95 px-4 py-3 backdrop-blur md:hidden">
         <Logo size={28} withWordmark />
+        <NotificationBell />
       </header>
 
       {/* Mobile bottom nav */}
