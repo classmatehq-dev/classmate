@@ -141,6 +141,10 @@ export async function listMyClasses(userId: string): Promise<MyClassDto[]> {
       and p.author_id <> ${userId}
       and p.created_at > coalesce(${classMemberships.lastSeenAt}, ${classMemberships.joinedAt})
   )`;
+  const postCount = sql<number>`(
+    select count(*)::int from ${posts} p
+    where p.class_id = ${classes.id} and p.status = 'active'
+  )`;
 
   const rows = await db
     .select({
@@ -150,6 +154,7 @@ export async function listMyClasses(userId: string): Promise<MyClassDto[]> {
       schoolName: schools.name,
       lastSeenAt: classMemberships.lastSeenAt,
       newPostCount,
+      postCount,
     })
     .from(classMemberships)
     .innerJoin(classes, eq(classes.id, classMemberships.classId))
@@ -170,6 +175,7 @@ export async function listMyClasses(userId: string): Promise<MyClassDto[]> {
     teacherName: r.teacherName,
     schoolName: r.schoolName,
     newPostCount: r.newPostCount ?? 0,
+    postCount: r.postCount ?? 0,
     lastSeenAt: r.lastSeenAt ? r.lastSeenAt.toISOString() : null,
   }));
 }

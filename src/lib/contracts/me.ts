@@ -52,6 +52,7 @@ export const myClassDto = z.object({
   teacherName: z.string(),
   schoolName: z.string(),
   newPostCount: z.number().int().nonnegative(),
+  postCount: z.number().int().nonnegative(),
   lastSeenAt: z.string().nullable(),
 });
 export type MyClassDto = z.infer<typeof myClassDto>;

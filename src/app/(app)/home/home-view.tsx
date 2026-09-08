@@ -282,9 +282,11 @@ function ClassCard({ klass }: { klass: MyClassDto }) {
             style={{ color: klass.newPostCount > 0 ? c.accent : undefined }}
           >
             {klass.newPostCount > 0 ? (
-              `${klass.newPostCount} new post${klass.newPostCount === 1 ? "" : "s"}`
+              `${klass.newPostCount} new`
             ) : (
-              <span className="text-muted">No new posts</span>
+              <span className="text-muted">
+                {klass.postCount} {klass.postCount === 1 ? "post" : "posts"}
+              </span>
             )}
           </p>
         </div>
