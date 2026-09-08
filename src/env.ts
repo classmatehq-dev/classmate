@@ -65,9 +65,14 @@ export const clerkConfigured = Boolean(
 export const authMode: "dev" | "clerk" = authDevBypass ? "dev" : "clerk";
 
 if (authMode === "clerk" && !clerkConfigured) {
-  throw new Error(
-    "AUTH_DEV_BYPASS is not 1 but Clerk keys are missing. Set " +
-      "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY, or set AUTH_DEV_BYPASS=1.",
+  // Warn, don't throw — a broken build is harder to debug than a deployed app
+  // that logs why auth isn't working. The Clerk SDK will also error clearly.
+  console.warn(
+    "[env] Clerk mode is on (AUTH_DEV_BYPASS != 1) but keys are incomplete — " +
+      `publishable: ${
+        env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? "set" : "MISSING"
+      }, secret: ${env.CLERK_SECRET_KEY ? "set" : "MISSING"}. ` +
+      "Sign-in will not work until both are set (or set AUTH_DEV_BYPASS=1).",
   );
 }
 
