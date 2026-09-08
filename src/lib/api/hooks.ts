@@ -23,6 +23,8 @@ import type {
   MyClassDto,
   UpdateProfileBody,
 } from "@/lib/contracts/me";
+import type { DiscoverResponse } from "@/lib/contracts/discover";
+import type { LeaderboardResponse } from "@/lib/contracts/leaderboard";
 import type {
   FollowResponse,
   PublicProfileDto,
@@ -288,6 +290,21 @@ export function useToggleFollow(username: string) {
     mutationFn: () =>
       api<FollowResponse>(`/api/users/${username}/follow`, { method: "POST" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["users", username] }),
+  });
+}
+
+export function useDiscover(q: string) {
+  return useQuery({
+    queryKey: ["discover", q],
+    queryFn: () => api<DiscoverResponse>("/api/discover", { query: { q } }),
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useLeaderboard() {
+  return useQuery({
+    queryKey: ["leaderboard"],
+    queryFn: () => api<LeaderboardResponse>("/api/leaderboard"),
   });
 }
 

@@ -11,6 +11,7 @@ import {
   Button,
   cx,
   EmptyState,
+  FeedSkeleton,
   Field,
   Spinner,
   Textarea,
@@ -194,12 +195,18 @@ export function ProfileView({
       <div className="mt-4 space-y-3">
         {tab !== "Posts" ? (
           <div className="px-4 md:px-0">
-            <EmptyState title={`${tab} — Coming Soon`} />
+            <EmptyState
+              icon={tab === "Study Sets" ? "🧠" : "📎"}
+              title={`${tab} are coming soon`}
+              description={
+                tab === "Study Sets"
+                  ? "Flashcard sets you create and share will show up here."
+                  : "Files, links, and study material will show up here."
+              }
+            />
           </div>
         ) : posts.isLoading ? (
-          <div className="flex justify-center py-10">
-            <Spinner />
-          </div>
+          <FeedSkeleton count={2} />
         ) : posts.data && posts.data.length > 0 ? (
           posts.data.map((post) => (
             <FeedPost

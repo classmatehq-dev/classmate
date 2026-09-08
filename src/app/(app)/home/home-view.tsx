@@ -6,7 +6,13 @@ import { useState } from "react";
 
 import { FeedPost } from "@/components/feed-post";
 import { NotificationBell } from "@/components/notification-bell";
-import { ButtonLink, Card, EmptyState, Spinner } from "@/components/ui";
+import {
+  ButtonLink,
+  Card,
+  EmptyState,
+  FeedSkeleton,
+  Skeleton,
+} from "@/components/ui";
 import { useHomeFeed, useMyClasses } from "@/lib/api/hooks";
 import { classColor } from "@/lib/class-color";
 import type { FeedItemDto } from "@/lib/contracts/feed";
@@ -133,20 +139,23 @@ export function HomeView({ username }: { username: string }) {
       <section className="mt-6">
         <SectionHeading
           action={
-            <Link
-              href="/profile"
-              className="text-sm font-semibold text-brand-blue hover:underline"
-            >
-              See all
-            </Link>
+            classes.length > 0 ? (
+              <Link
+                href="/classes/add"
+                className="text-sm font-semibold text-brand-blue hover:underline"
+              >
+                + Add
+              </Link>
+            ) : undefined
           }
         >
           My Classes
         </SectionHeading>
 
         {myClasses.isLoading ? (
-          <div className="flex justify-center py-6">
-            <Spinner />
+          <div className="flex gap-3 px-4 md:px-0">
+            <Skeleton className="h-28 w-40 shrink-0 rounded-card" />
+            <Skeleton className="h-28 w-40 shrink-0 rounded-card" />
           </div>
         ) : classes.length > 0 ? (
           <div className="flex gap-3 overflow-x-auto px-4 pb-2 md:px-0">
@@ -211,9 +220,7 @@ export function HomeView({ username }: { username: string }) {
 
         <div>
           {feed.isLoading ? (
-            <div className="flex justify-center py-10">
-              <Spinner />
-            </div>
+            <FeedSkeleton />
           ) : feed.data && feed.data.items.length > 0 ? (
             <div className="space-y-3 md:px-0">
               {feed.data.items.map((post) => (

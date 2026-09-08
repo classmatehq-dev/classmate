@@ -62,14 +62,19 @@ export function SchoolOnboarding() {
                 key={school.id}
                 onClick={() => choose(school)}
                 disabled={setSchool.isPending}
-                className="w-full text-left"
+                className="block w-full text-left"
               >
-                <Card className="transition-colors hover:border-brand-blue">
-                  <p className="font-semibold text-navy">{school.name}</p>
-                  <p className="text-sm text-muted">
-                    {[school.city, school.state].filter(Boolean).join(", ")}
-                    {school.status === "pending" && " · pending review"}
-                  </p>
+                <Card interactive className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-navy">{school.name}</p>
+                    <p className="text-sm text-muted">
+                      {[school.city, school.state].filter(Boolean).join(", ")}
+                      {school.status === "pending" && " · pending review"}
+                    </p>
+                  </div>
+                  <span className="text-brand-blue" aria-hidden>
+                    →
+                  </span>
                 </Card>
               </button>
             ))}

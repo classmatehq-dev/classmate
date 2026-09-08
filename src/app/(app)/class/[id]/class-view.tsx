@@ -10,6 +10,7 @@ import {
   Card,
   cx,
   EmptyState,
+  FeedSkeleton,
   Spinner,
 } from "@/components/ui";
 import { ApiClientError } from "@/lib/api/client";
@@ -166,9 +167,7 @@ export function ClassView({ classId }: { classId: string }) {
             </div>
 
             {posts.isLoading ? (
-              <div className="flex justify-center py-10">
-                <Spinner />
-              </div>
+              <FeedSkeleton />
             ) : filteredPosts && filteredPosts.length > 0 ? (
               filteredPosts.map((p) => (
                 <FeedPost
