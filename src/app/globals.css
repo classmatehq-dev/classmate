@@ -9,14 +9,19 @@
   --color-brand-blue: #1557d6;
   --color-brand-blue-600: #1249b5;
   --color-brand-blue-700: #0f3c96;
+  --color-sky: #3d7bf0;
+  --color-ice: #f3f8ff;
   --color-accent-yellow: #ffc928;
+  --color-accent-yellow-600: #e0a600;
+  --color-gold-tint: #fff3d6;
   --color-navy: #0b1f44;
   --color-light-blue: #eaf2ff;
+  --color-light-blue-200: #d7e6ff;
 
   /* Semantic surfaces / text (light theme only for MVP) */
-  --color-background: #f6f8fc;
+  --color-background: #eef3fb;
   --color-surface: #ffffff;
-  --color-border: #e4e9f2;
+  --color-border: #e1e8f4;
   --color-foreground: #0b1f44;
   --color-muted: #5b6b8c;
 
@@ -24,8 +29,12 @@
     var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  --radius-card: 1rem;
+  --radius-card: 1.1rem;
   --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(11, 31, 68, 0.04), 0 4px 16px rgba(11, 31, 68, 0.05);
+  --shadow-blue: 0 10px 30px rgba(21, 87, 214, 0.28);
+  --shadow-blue-sm: 0 6px 18px rgba(21, 87, 214, 0.16);
 }
 
 /* ------------------------------------------------------------------ */
@@ -57,4 +66,43 @@ h3 {
 :focus-visible {
   outline: 2px solid var(--color-brand-blue);
   outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Reusable surface treatments                                        */
+/* ------------------------------------------------------------------ */
+
+.bg-hero {
+  background-image: linear-gradient(
+    135deg,
+    #1249b5 0%,
+    #1557d6 42%,
+    #3d7bf0 100%
+  );
+}
+
+/* faint dotted texture for hero / feature panels */
+.bg-hero-dots {
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.14) 1.4px, transparent 1.4px);
+  background-size: 22px 22px;
+}
+
+.bg-sky {
+  background-image: linear-gradient(160deg, #eaf2ff 0%, #f7faff 100%);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise 0.35s ease both;
 }

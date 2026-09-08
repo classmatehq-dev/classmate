@@ -74,26 +74,43 @@ export function AppNav({
   return (
     <>
       {/* Desktop sidebar */}
-      <nav className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col gap-1 py-6 md:flex">
-        <Link href="/home" className="mb-4 px-3">
+      <nav className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-1 py-6 md:flex">
+        <Link href="/home" className="mb-5 px-3">
           <Logo size={32} withWordmark />
         </Link>
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cx(
-              "flex items-center gap-3 rounded-pill px-3 py-2.5 text-[15px] font-semibold transition-colors",
-              isActive(item.href)
-                ? "bg-light-blue text-brand-blue"
-                : "text-navy hover:bg-light-blue/60",
-              item.emphasized && !isActive(item.href) && "text-brand-blue",
-            )}
-          >
-            {item.icon}
-            {item.label}
-          </Link>
-        ))}
+
+        {items.map((item) =>
+          item.emphasized ? (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cx(
+                "my-1.5 flex items-center gap-2 rounded-pill bg-brand-blue px-4 py-3 text-[15px] font-bold text-white shadow-blue transition-colors hover:bg-brand-blue-600",
+                isActive(item.href) && "ring-2 ring-brand-blue/30",
+              )}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          ) : (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cx(
+                "relative flex items-center gap-3 rounded-pill px-3 py-2.5 text-[15px] font-semibold transition-colors",
+                isActive(item.href)
+                  ? "bg-light-blue text-brand-blue"
+                  : "text-navy hover:bg-light-blue/60",
+              )}
+            >
+              {isActive(item.href) && (
+                <span className="absolute -left-1 top-1/2 h-5 w-1 -translate-y-1/2 rounded-pill bg-brand-blue" />
+              )}
+              {item.icon}
+              {item.label}
+            </Link>
+          ),
+        )}
 
         <div className="mt-auto px-3 pt-4">
           <AccountControl authMode={authMode} />
@@ -101,33 +118,46 @@ export function AppNav({
       </nav>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface/95 px-4 py-3 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface/90 px-4 py-3 backdrop-blur md:hidden">
         <Logo size={28} withWordmark />
         <NotificationBell />
       </header>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-20 flex items-stretch justify-around border-t border-border bg-surface md:hidden">
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cx(
-              "flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium",
-              isActive(item.href) ? "text-brand-blue" : "text-muted",
-            )}
-          >
-            <span
+      <nav className="fixed inset-x-0 bottom-0 z-20 flex items-stretch justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        {items.map((item) =>
+          item.emphasized ? (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex flex-1 flex-col items-center justify-center"
+              aria-label={item.label}
+            >
+              <span className="-mt-5 flex h-12 w-12 items-center justify-center rounded-full bg-brand-blue text-white shadow-blue ring-4 ring-background">
+                {item.icon}
+              </span>
+            </Link>
+          ) : (
+            <Link
+              key={item.href}
+              href={item.href}
               className={cx(
-                item.emphasized &&
-                  "rounded-full bg-brand-blue p-1.5 text-white",
+                "flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-semibold transition-colors",
+                isActive(item.href) ? "text-brand-blue" : "text-muted",
               )}
             >
-              {item.icon}
-            </span>
-            {!item.emphasized && item.label}
-          </Link>
-        ))}
+              <span
+                className={cx(
+                  "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                  isActive(item.href) && "bg-light-blue",
+                )}
+              >
+                {item.icon}
+              </span>
+              {item.label}
+            </Link>
+          ),
+        )}
       </nav>
     </>
   );

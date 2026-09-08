@@ -18,6 +18,7 @@ import {
   useClassPosts,
   useJoinClass,
 } from "@/lib/api/hooks";
+import { classColor } from "@/lib/class-color";
 
 const TABS = ["Posts", "Questions", "Study Sets", "Resources"] as const;
 type Tab = (typeof TABS)[number];
@@ -56,42 +57,54 @@ export function ClassView({ classId }: { classId: string }) {
   }
 
   const c = klass.data!;
+  const cc = classColor(c.id);
   const filteredPosts =
     tab === "Questions"
       ? posts.data?.items.filter((p) => p.type === "question")
       : posts.data?.items;
 
   return (
-    <div>
+    <div className="animate-rise">
       {/* Header */}
-      <header className="border-b border-border bg-surface px-4 py-5 md:rounded-card md:border">
-        <div className="flex items-center gap-2 text-sm text-brand-blue">
-          <Link href="/home" className="font-semibold">
-            ← Home
-          </Link>
+      <header className="relative overflow-hidden px-4 pt-4 md:px-0">
+        <div
+          className="relative rounded-card p-5 text-white shadow-blue-sm"
+          style={{
+            backgroundImage: `linear-gradient(135deg, ${cc.text}, ${cc.accent})`,
+          }}
+        >
+          <div className="bg-hero-dots pointer-events-none absolute inset-0 opacity-50" />
+          <div className="relative">
+            <Link
+              href="/home"
+              className="text-sm font-semibold text-white/80 hover:text-white"
+            >
+              ← Home
+            </Link>
+            <h1 className="mt-2 text-2xl font-extrabold">{c.name}</h1>
+            <p className="mt-1 text-sm text-white/85">
+              {c.teacher.displayName} · {c.school.name}
+              {c.courseLevel && ` · ${c.courseLevel}`}
+              {c.period && ` · ${c.period}`}
+            </p>
+            <span className="mt-3 inline-flex items-center rounded-pill bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
+              {c.memberCount} {c.memberCount === 1 ? "member" : "members"}
+            </span>
+          </div>
         </div>
-        <h1 className="mt-2 text-2xl font-extrabold text-navy">{c.name}</h1>
-        <p className="mt-1 text-muted">
-          {c.teacher.displayName} · {c.school.name}
-          {c.courseLevel && ` · ${c.courseLevel}`}
-          {c.period && ` · ${c.period}`}
-        </p>
-        <p className="mt-1 text-sm text-muted">
-          {c.memberCount} {c.memberCount === 1 ? "member" : "members"}
-        </p>
       </header>
 
       {/* Tabs */}
-      <div className="scrollbar-none mt-3 flex gap-1 overflow-x-auto px-4 md:px-0">
+      <div className="scrollbar-none mt-4 flex gap-1 overflow-x-auto px-4 md:px-0">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cx(
-              "shrink-0 rounded-pill px-3 py-1.5 text-sm font-semibold transition-colors",
+              "shrink-0 rounded-pill px-3.5 py-1.5 text-sm font-bold transition-colors",
               tab === t
-                ? "bg-brand-blue text-white"
-                : "text-muted hover:bg-light-blue/60",
+                ? "bg-brand-blue text-white shadow-blue-sm"
+                : "bg-surface text-muted hover:bg-light-blue/60",
             )}
           >
             {t}

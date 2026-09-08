@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { Avatar, Badge, cx } from "@/components/ui";
 import { api, ApiClientError } from "@/lib/api/client";
+import { classColor } from "@/lib/class-color";
 import type { FeedItemDto } from "@/lib/contracts/feed";
 import { relativeTime } from "@/lib/time";
 
@@ -22,25 +23,25 @@ export function FeedPost({
   const [helpful, setHelpful] = useState(post.viewerHasMarkedHelpful);
   const [count, setCount] = useState(post.helpfulCount);
   const [pending, setPending] = useState(false);
+  const c = classColor(post.class.id);
 
   async function toggleHelpful() {
     if (pending) return;
     setPending(true);
     const next = !helpful;
     setHelpful(next);
-    setCount((c) => c + (next ? 1 : -1));
+    setCount((n) => n + (next ? 1 : -1));
     try {
-      const res = await api<{ marked: boolean; count: number }>(
-        "/api/helpful",
-        { method: "POST", body: { targetType: "post", targetId: post.id } },
-      );
+      const res = await api<{ marked: boolean; count: number }>("/api/helpful", {
+        method: "POST",
+        body: { targetType: "post", targetId: post.id },
+      });
       setHelpful(res.marked);
       setCount(res.count);
       onChanged?.();
     } catch (err) {
-      // revert
       setHelpful(!next);
-      setCount((c) => c - (next ? 1 : -1));
+      setCount((n) => n - (next ? 1 : -1));
       if (err instanceof ApiClientError && err.status === 401) {
         router.push("/login");
       }
@@ -50,22 +51,35 @@ export function FeedPost({
   }
 
   return (
-    <article className="border-b border-border bg-surface px-4 py-4 md:rounded-card md:border md:mb-3">
+    <article className="rounded-card border border-border bg-surface p-4 shadow-card transition-shadow hover:shadow-blue-sm max-md:mx-3">
       <div className="flex items-center gap-2.5">
-        <Avatar username={post.author.username} src={post.author.avatarUrl} size={36} />
+        <Avatar
+          username={post.author.username}
+          src={post.author.avatarUrl}
+          size={38}
+        />
         <div className="min-w-0 text-sm">
-          <span className="font-semibold text-navy">
+          <Link
+            href={`/u/${post.author.username}`}
+            className="font-bold text-navy hover:underline"
+          >
             @{post.author.username}
-          </span>
-          <div className="text-muted">
-            <Link href={`/class/${post.class.id}`} className="hover:underline">
-              {post.class.name} · {post.class.teacherName}
+          </Link>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+            <Link
+              href={`/class/${post.class.id}`}
+              className="inline-flex items-center rounded-pill px-2 py-0.5 font-semibold"
+              style={{ background: c.bg, color: c.text }}
+            >
+              {post.class.name}
             </Link>
-            <span> · {relativeTime(post.createdAt)}</span>
+            <span>{post.class.teacherName}</span>
+            <span aria-hidden>·</span>
+            <span>{relativeTime(post.createdAt)}</span>
           </div>
         </div>
         {post.type === "question" && (
-          <span className="ml-auto">
+          <span className="ml-auto self-start">
             <Badge tone="yellow">Question</Badge>
           </span>
         )}
@@ -77,15 +91,15 @@ export function FeedPost({
         </p>
       </Link>
 
-      <div className="mt-3 flex items-center gap-5 text-sm">
+      <div className="mt-3 flex items-center gap-2 text-sm">
         <button
           onClick={toggleHelpful}
           disabled={pending}
           className={cx(
-            "inline-flex items-center gap-1.5 rounded-pill px-2 py-1 font-semibold transition-colors",
+            "inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 font-bold transition-colors",
             helpful
-              ? "bg-light-blue text-brand-blue"
-              : "text-muted hover:bg-light-blue/60",
+              ? "bg-brand-blue text-white"
+              : "bg-light-blue/70 text-brand-blue hover:bg-light-blue",
           )}
           aria-pressed={helpful}
         >
@@ -95,9 +109,12 @@ export function FeedPost({
 
         <Link
           href={`/post/${post.id}`}
-          className="inline-flex items-center gap-1.5 text-muted hover:text-navy"
+          className="inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 font-semibold text-muted transition-colors hover:bg-background hover:text-navy"
         >
           <span aria-hidden>💬</span> {post.commentCount}
+          <span className="hidden sm:inline">
+            {post.commentCount === 1 ? "reply" : "replies"}
+          </span>
         </Link>
       </div>
     </article>

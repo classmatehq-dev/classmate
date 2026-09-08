@@ -66,12 +66,15 @@ export function ButtonLink({
 
 export function Card({
   className,
+  interactive,
   ...props
-}: ComponentProps<"div">) {
+}: ComponentProps<"div"> & { interactive?: boolean }) {
   return (
     <div
       className={cx(
-        "rounded-card border border-border bg-surface p-4 shadow-[0_1px_2px_rgba(11,31,68,0.04)]",
+        "rounded-card border border-border bg-surface p-4 shadow-card",
+        interactive &&
+          "transition-all hover:-translate-y-0.5 hover:border-brand-blue/40 hover:shadow-blue-sm",
         className,
       )}
       {...props}
@@ -184,14 +187,19 @@ export function EmptyState({
   title,
   description,
   action,
+  icon = "✨",
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
+  icon?: ReactNode;
 }) {
   return (
-    <div className="rounded-card border border-dashed border-border bg-surface px-6 py-10 text-center">
-      <p className="text-base font-semibold text-navy">{title}</p>
+    <div className="rounded-card border border-border bg-sky px-6 py-10 text-center">
+      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface text-xl shadow-card">
+        {icon}
+      </span>
+      <p className="mt-3 text-base font-semibold text-navy">{title}</p>
       {description ? (
         <p className="mx-auto mt-1 max-w-xs text-sm text-muted">{description}</p>
       ) : null}

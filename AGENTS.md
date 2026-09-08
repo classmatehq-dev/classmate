@@ -26,6 +26,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Classmate profile fields (username, gradeLevel, bio, avatar) live in our `users` table keyed by `clerkUserId` — never sent to Clerk signup.
 - "Helpful", never "Like". Content status: `active | hidden | deleted | under_review`.
 - Brand: blue `#1557D6` (dominant), yellow `#FFC928` (accent only), navy `#0B1F44`, light blue `#EAF2FF`. Mobile-first, rounded, bottom nav on mobile. Tokens in `src/app/globals.css`.
+- Design system: page headers use the `.bg-hero` blue gradient + `.bg-hero-dots` texture, white text, one yellow accent (glow / greeting). `shadow-card` on cards, `shadow-blue` / `shadow-blue-sm` for lift. Sections use the `SectionHeading` pattern (blue or yellow accent bar). Classes get a deterministic blue-shade colour via `classColor(id)` in `src/lib/class-color.ts` — use it for class chips/cards/headers. `.animate-rise` on top-level page containers. Keep it blue-dominant with gold as the single warm accent.
 - Run `npm run build` (typechecks too) after meaningful changes.
 
 **Next 16 note:** breaking changes vs. older Next. Check `node_modules/next/dist/docs/` before using route/params/cookies APIs — `params`, `searchParams`, `cookies()`, `headers()` are async.

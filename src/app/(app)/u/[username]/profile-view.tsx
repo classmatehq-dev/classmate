@@ -72,100 +72,118 @@ export function ProfileView({
   const p = profile.data;
 
   return (
-    <div>
-      <header className="border-b border-border bg-surface px-4 py-6 md:rounded-card md:border">
-        <div className="flex items-start gap-4">
-          <Avatar username={p.username} src={p.avatarUrl} size={64} />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-extrabold text-navy">@{p.username}</h1>
-            {p.gradeLevel && (
-              <p className="text-sm text-muted">
-                {GRADE_LABEL[p.gradeLevel] ?? p.gradeLevel}
-              </p>
-            )}
+    <div className="animate-rise">
+      <header className="overflow-hidden md:rounded-card md:border md:border-border">
+        <div className="bg-hero relative h-24">
+          <div className="bg-hero-dots absolute inset-0 opacity-50" />
+          <div className="absolute -right-6 -top-8 h-28 w-28 rounded-full bg-accent-yellow/25 blur-2xl" />
+        </div>
+        <div className="bg-surface px-4 pb-5">
+          <div className="-mt-9 flex items-end gap-4">
+            <span className="rounded-full ring-4 ring-surface">
+              <Avatar username={p.username} src={p.avatarUrl} size={72} />
+            </span>
+            <div className="min-w-0 flex-1 pb-1">
+              <h1 className="text-xl font-extrabold text-navy">
+                @{p.username}
+              </h1>
+              {p.gradeLevel && (
+                <p className="text-sm text-muted">
+                  {GRADE_LABEL[p.gradeLevel] ?? p.gradeLevel}
+                </p>
+              )}
+            </div>
+            <div className="pb-1">
+              {p.isSelf ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    setBio(p.bio ?? "");
+                    setEditing((v) => !v);
+                  }}
+                >
+                  Edit
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant={p.viewerIsFollowing ? "secondary" : "primary"}
+                  disabled={follow.isPending}
+                  onClick={() => follow.mutate()}
+                >
+                  {p.viewerIsFollowing ? "Following" : "Follow"}
+                </Button>
+              )}
+            </div>
           </div>
-          {p.isSelf ? (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                setBio(p.bio ?? "");
-                setEditing((v) => !v);
+
+          {editing ? (
+            <form
+              className="mt-4"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                await updateProfile.mutateAsync({ bio: bio.trim() });
+                setEditing(false);
+                profile.refetch();
               }}
             >
-              Edit
-            </Button>
+              <Field label="Bio">
+                <Textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  maxLength={280}
+                  className="min-h-[64px]"
+                />
+              </Field>
+              <div className="mt-2 flex gap-2">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={updateProfile.isPending}
+                >
+                  Save
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setEditing(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
           ) : (
-            <Button
-              size="sm"
-              variant={p.viewerIsFollowing ? "secondary" : "primary"}
-              disabled={follow.isPending}
-              onClick={() => follow.mutate()}
-            >
-              {p.viewerIsFollowing ? "Following" : "Follow"}
-            </Button>
+            p.bio && <p className="mt-3 text-[15px] text-navy">{p.bio}</p>
           )}
-        </div>
 
-        {editing ? (
-          <form
-            className="mt-4"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              await updateProfile.mutateAsync({ bio: bio.trim() });
-              setEditing(false);
-              profile.refetch();
-            }}
-          >
-            <Field label="Bio">
-              <Textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                maxLength={280}
-                className="min-h-[64px]"
-              />
-            </Field>
-            <div className="mt-2 flex gap-2">
-              <Button type="submit" size="sm" disabled={updateProfile.isPending}>
-                Save
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={() => setEditing(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        ) : (
-          p.bio && <p className="mt-3 text-[15px] text-navy">{p.bio}</p>
-        )}
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <Stat label="Helpful" value={p.helpfulReceived} highlight />
+            <Stat label="Followers" value={p.followersCount} />
+            <Stat label="Following" value={p.followingCount} />
+          </div>
 
-        <div className="mt-4 flex gap-6 text-sm">
-          <Stat label="Helpful" value={p.helpfulReceived} />
-          <Stat label="Followers" value={p.followersCount} />
-          <Stat label="Following" value={p.followingCount} />
-        </div>
-
-        <div className="mt-3">
-          {p.isSelf ? (
-            <AccountControl authMode={authMode} />
-          ) : (
-            <ReportButton targetType="profile" targetId={p.id} />
-          )}
+          <div className="mt-3">
+            {p.isSelf ? (
+              <AccountControl authMode={authMode} />
+            ) : (
+              <ReportButton targetType="profile" targetId={p.id} />
+            )}
+          </div>
         </div>
       </header>
 
-      <div className="mt-3 flex gap-1 px-4 md:px-0">
+      <div className="mt-4 flex gap-1 px-4 md:px-0">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cx(
-              "rounded-pill px-3 py-1.5 text-sm font-semibold",
-              tab === t ? "bg-brand-blue text-white" : "text-muted",
+              "rounded-pill px-3.5 py-1.5 text-sm font-bold transition-colors",
+              tab === t
+                ? "bg-brand-blue text-white shadow-blue-sm"
+                : "bg-surface text-muted hover:bg-light-blue/60",
             )}
           >
             {t}
@@ -173,7 +191,7 @@ export function ProfileView({
         ))}
       </div>
 
-      <div className="mt-3">
+      <div className="mt-4 space-y-3">
         {tab !== "Posts" ? (
           <div className="px-4 md:px-0">
             <EmptyState title={`${tab} — Coming Soon`} />
@@ -202,11 +220,33 @@ export function ProfileView({
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: number;
+  highlight?: boolean;
+}) {
   return (
-    <span>
-      <span className="font-bold text-navy">{value}</span>{" "}
-      <span className="text-muted">{label}</span>
-    </span>
+    <div
+      className={cx(
+        "rounded-xl border px-3 py-2 text-center",
+        highlight
+          ? "border-transparent bg-brand-blue text-white"
+          : "border-border bg-background text-navy",
+      )}
+    >
+      <div className="text-lg font-extrabold">{value}</div>
+      <div
+        className={cx(
+          "text-xs font-semibold",
+          highlight ? "text-white/80" : "text-muted",
+        )}
+      >
+        {label}
+      </div>
+    </div>
   );
 }

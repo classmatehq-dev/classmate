@@ -80,28 +80,31 @@ export function PostView({ postId }: { postId: string }) {
   const p = post.data!;
 
   return (
-    <div>
+    <div className="animate-rise">
       <div className="px-4 py-3 md:px-0">
         <button
           onClick={() => router.back()}
-          className="text-sm font-semibold text-brand-blue"
+          className="inline-flex items-center gap-1 rounded-pill bg-surface px-3 py-1.5 text-sm font-semibold text-brand-blue shadow-card hover:bg-light-blue"
         >
           ← Back
         </button>
       </div>
 
-      <article className="border-y border-border bg-surface px-4 py-4 md:rounded-card md:border">
+      <article className="rounded-card border border-border bg-surface p-4 shadow-card max-md:mx-3">
         <div className="flex items-center gap-2.5">
-          <Avatar username={p.author.username} src={p.author.avatarUrl} size={40} />
+          <Avatar username={p.author.username} src={p.author.avatarUrl} size={42} />
           <div className="text-sm">
             <Link
               href={`/u/${p.author.username}`}
-              className="font-semibold text-navy hover:underline"
+              className="font-bold text-navy hover:underline"
             >
               @{p.author.username}
             </Link>
-            <div className="text-muted">
-              <Link href={`/class/${p.classId}`} className="hover:underline">
+            <div className="text-xs text-muted">
+              <Link
+                href={`/class/${p.classId}`}
+                className="font-semibold text-brand-blue hover:underline"
+              >
                 View class
               </Link>
               <span> · {relativeTime(p.createdAt)}</span>
@@ -118,14 +121,14 @@ export function PostView({ postId }: { postId: string }) {
           {p.body}
         </p>
 
-        <div className="mt-4 flex items-center gap-5 text-sm">
+        <div className="mt-4 flex items-center gap-2 text-sm">
           <button
             onClick={toggleHelpful}
             className={cx(
-              "inline-flex items-center gap-1.5 rounded-pill px-2 py-1 font-semibold",
+              "inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 font-bold transition-colors",
               helpful
-                ? "bg-light-blue text-brand-blue"
-                : "text-muted hover:bg-light-blue/60",
+                ? "bg-brand-blue text-white"
+                : "bg-light-blue/70 text-brand-blue hover:bg-light-blue",
             )}
           >
             👍 {count} Helpful
