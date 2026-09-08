@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* Classmate brand tokens                                             */
+/* ------------------------------------------------------------------ */
+
+@theme {
+  /* Brand palette */
+  --color-brand-blue: #1557d6;
+  --color-brand-blue-600: #1249b5;
+  --color-brand-blue-700: #0f3c96;
+  --color-accent-yellow: #ffc928;
+  --color-navy: #0b1f44;
+  --color-light-blue: #eaf2ff;
+
+  /* Semantic surfaces / text (light theme only for MVP) */
+  --color-background: #f6f8fc;
+  --color-surface: #ffffff;
+  --color-border: #e4e9f2;
+  --color-foreground: #0b1f44;
+  --color-muted: #5b6b8c;
+
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --radius-card: 1rem;
+  --radius-pill: 999px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                              */
+/* ------------------------------------------------------------------ */
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+}
+
+/* Comfortable default focus ring for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-brand-blue);
+  outline-offset: 2px;
+}

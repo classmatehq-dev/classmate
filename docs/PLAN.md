@@ -40,8 +40,8 @@ classmate/
 
 | # | Step | Status |
 |---|------|--------|
-| 0 | Install Node, scaffold Next.js, brand/design system, app shell + nav | pending |
-| 1 | DB schema (users, schools, teachers, classes, classMemberships, posts, comments, helpfulVotes, follows, reports, blocks) + migrations | pending |
+| 0 | Install Node, scaffold Next.js, brand/design system, app shell + nav | ✅ scaffold + brand + welcome page done; app shell/nav next |
+| 1 | DB schema (users, schools, teachers, classes, classMemberships, posts, comments, helpfulVotes, follows, reports, blocks) + migrations | ✅ schema + first migration generated; needs a DB to apply |
 | 2 | Auth bridge: Clerk + dev bypass, `getCurrentUser`, profile creation | pending |
 | 3 | Welcome / signup / login / email verify | pending |
 | 4 | School onboarding: `GET/POST /api/schools`, persist selection to profile | pending |

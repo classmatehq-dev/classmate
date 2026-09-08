@@ -1,0 +1,42 @@
+import Link from "next/link";
+
+import { Logo } from "@/components/logo";
+
+export default function WelcomePage() {
+  return (
+    <main className="flex flex-1 flex-col items-center justify-center px-6 py-16">
+      <div className="w-full max-w-sm text-center">
+        <div className="flex justify-center">
+          <Logo size={64} />
+        </div>
+
+        <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-navy">
+          Classmate
+        </h1>
+        <p className="mt-2 text-lg font-semibold text-brand-blue">
+          Learn from your class.
+        </p>
+
+        <p className="mt-4 text-base leading-7 text-muted">
+          Find notes, questions, discussions, and study material from students in
+          your classes.
+        </p>
+
+        <div className="mt-10 flex flex-col gap-3">
+          <Link
+            href="/signup"
+            className="flex h-12 items-center justify-center rounded-pill bg-brand-blue px-6 text-base font-semibold text-white transition-colors hover:bg-brand-blue-600"
+          >
+            Get Started
+          </Link>
+          <Link
+            href="/login"
+            className="flex h-12 items-center justify-center rounded-pill border border-border bg-surface px-6 text-base font-semibold text-navy transition-colors hover:bg-light-blue"
+          >
+            Log In
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+}
