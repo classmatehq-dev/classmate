@@ -26,7 +26,7 @@ export default async function LoginPage() {
           <SignIn
             routing="hash"
             signUpUrl="/signup"
-            forceRedirectUrl="/onboarding/profile"
+            fallbackRedirectUrl="/"
           />
         </div>
       </main>

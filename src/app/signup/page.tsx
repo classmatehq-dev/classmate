@@ -29,7 +29,7 @@ export default async function SignUpPage() {
         <SignUp
           routing="hash"
           signInUrl="/login"
-          forceRedirectUrl="/onboarding/profile"
+          fallbackRedirectUrl="/"
         />
       </div>
     </main>
