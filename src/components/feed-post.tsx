@@ -65,15 +65,15 @@ export function FeedPost({
           >
             @{post.author.username}
           </Link>
-          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[13px] text-muted">
             <Link
               href={`/class/${post.class.id}`}
-              className="inline-flex items-center rounded-pill px-2 py-0.5 font-semibold"
+              className="inline-flex items-center rounded-pill px-2 py-0.5 font-bold"
               style={{ background: c.bg, color: c.text }}
             >
               {post.class.name}
             </Link>
-            <span>{post.class.teacherName}</span>
+            <span className="font-medium">{post.class.teacherName}</span>
             <span aria-hidden>·</span>
             <span>{relativeTime(post.createdAt)}</span>
           </div>
@@ -86,7 +86,7 @@ export function FeedPost({
       </div>
 
       <Link href={`/post/${post.id}`} className="mt-3 block">
-        <p className="whitespace-pre-wrap text-[15px] leading-6 text-navy">
+        <p className="whitespace-pre-wrap text-base leading-7 text-navy">
           {post.body}
         </p>
       </Link>

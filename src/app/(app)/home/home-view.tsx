@@ -73,10 +73,10 @@ export function HomeView({ username }: { username: string }) {
           <div className="relative">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-semibold text-accent-yellow">
+                <p className="text-[15px] font-semibold text-accent-yellow">
                   {greeting()},
                 </p>
-                <h1 className="text-2xl font-extrabold tracking-tight">
+                <h1 className="text-3xl font-extrabold tracking-tight">
                   {username}
                 </h1>
               </div>
@@ -85,7 +85,7 @@ export function HomeView({ username }: { username: string }) {
               </span>
             </div>
 
-            <p className="mt-1 text-sm text-white/85">
+            <p className="mt-1.5 text-[15px] font-medium text-white/95">
               {classes.length === 0
                 ? "Join a class to start learning with your classmates."
                 : totalNew > 0
@@ -117,8 +117,8 @@ export function HomeView({ username }: { username: string }) {
                   <path d="m21 21-4.3-4.3" />
                 </svg>
                 <input
-                  className="w-full bg-transparent text-sm text-navy placeholder:text-muted focus:outline-none"
-                  placeholder="Search classes, students, or study sets"
+                  className="w-full bg-transparent text-[15px] text-navy placeholder:text-muted focus:outline-none"
+                  placeholder="Search classes, students, study sets"
                   aria-label="Search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -191,10 +191,10 @@ export function HomeView({ username }: { username: string }) {
                     {i + 1}
                   </span>
                   <div className="min-w-0">
-                    <p className="line-clamp-2 text-sm font-medium text-navy">
+                    <p className="line-clamp-2 text-[15px] font-medium text-navy">
                       {p.body}
                     </p>
-                    <p className="mt-0.5 text-xs text-muted">
+                    <p className="mt-1 text-[13px] text-muted">
                       {p.class.name} · 👍 {p.helpfulCount} · 💬 {p.commentCount}
                     </p>
                   </div>
@@ -264,10 +264,14 @@ function ClassCard({ klass }: { klass: MyClassDto }) {
           </span>
         </div>
         <div className="flex flex-1 flex-col p-3">
-          <p className="line-clamp-1 font-bold text-navy">{klass.name}</p>
-          <p className="line-clamp-1 text-xs text-muted">{klass.teacherName}</p>
+          <p className="line-clamp-1 text-[15px] font-bold text-navy">
+            {klass.name}
+          </p>
+          <p className="line-clamp-1 text-[13px] text-muted">
+            {klass.teacherName}
+          </p>
           <p
-            className="mt-auto pt-2 text-xs font-bold"
+            className="mt-auto pt-2 text-[13px] font-bold"
             style={{ color: klass.newPostCount > 0 ? c.accent : undefined }}
           >
             {klass.newPostCount > 0 ? (

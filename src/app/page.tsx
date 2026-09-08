@@ -33,12 +33,12 @@ function Welcome() {
           </span>
         </div>
 
-        <h1 className="mt-7 text-4xl font-extrabold tracking-tight">Classmate</h1>
-        <p className="mt-2 text-lg font-bold text-accent-yellow">
+        <h1 className="mt-7 text-5xl font-extrabold tracking-tight">Classmate</h1>
+        <p className="mt-3 text-xl font-bold text-accent-yellow">
           Learn from your class.
         </p>
 
-        <p className="mx-auto mt-4 max-w-xs text-base leading-7 text-white/85">
+        <p className="mx-auto mt-4 max-w-xs text-lg leading-8 text-white">
           Find notes, questions, discussions, and study material from students in
           your classes.
         </p>
