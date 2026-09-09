@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SignUp } from "@clerk/nextjs";
 
@@ -8,6 +9,13 @@ import {
   onboardingPath,
   onboardingStep,
 } from "@/server/auth/current-user";
+
+export const metadata: Metadata = {
+  title: "Create your account",
+  description:
+    "Join Classmate and connect with the students in your exact class.",
+  alternates: { canonical: "/signup" },
+};
 
 export default async function SignUpPage() {
   const { identity, user } = await getAuthContext();

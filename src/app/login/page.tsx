@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignIn } from "@clerk/nextjs";
@@ -11,6 +12,11 @@ import {
   onboardingStep,
 } from "@/server/auth/current-user";
 import { DevAccountSwitcher } from "./dev-switcher";
+
+export const metadata: Metadata = {
+  title: "Log in",
+  robots: { index: false, follow: true },
+};
 
 export default async function LoginPage() {
   const { identity, user } = await getAuthContext();
