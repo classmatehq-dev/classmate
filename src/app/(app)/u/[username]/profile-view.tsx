@@ -12,13 +12,11 @@ import {
   EmptyState,
   FeedSkeleton,
   Spinner,
-  Textarea,
 } from "@/components/ui";
 import {
   useProfile,
   useProfilePosts,
   useToggleFollow,
-  useUpdateProfile,
 } from "@/lib/api/hooks";
 
 const TABS = ["Posts", "Study Sets", "Resources"] as const;
@@ -40,10 +38,7 @@ export function ProfileView({
   const profile = useProfile(username);
   const posts = useProfilePosts(username);
   const follow = useToggleFollow(username);
-  const updateProfile = useUpdateProfile();
   const [tab, setTab] = useState<Tab>("Posts");
-  const [editing, setEditing] = useState(false);
-  const [bio, setBio] = useState("");
 
   if (profile.isLoading) {
     return (
@@ -95,15 +90,12 @@ export function ProfileView({
             </div>
 
             {p.isSelf ? (
-              <button
-                onClick={() => {
-                  setBio(p.bio ?? "");
-                  setEditing((v) => !v);
-                }}
+              <Link
+                href="/settings"
                 className="shrink-0 rounded-pill bg-white/15 px-4 py-1.5 text-sm font-bold text-white backdrop-blur transition-colors hover:bg-white/25"
               >
                 Edit profile
-              </button>
+              </Link>
             ) : (
               <button
                 disabled={follow.isPending}
@@ -120,46 +112,8 @@ export function ProfileView({
             )}
           </div>
 
-          {editing ? (
-            <form
-              className="mt-4"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                await updateProfile.mutateAsync({ bio: bio.trim() });
-                setEditing(false);
-                profile.refetch();
-              }}
-            >
-              <Textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                maxLength={280}
-                placeholder="Add a short bio"
-                className="min-h-[64px] border-white/30 bg-white/10 text-white placeholder:text-white/60"
-              />
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="submit"
-                  disabled={updateProfile.isPending}
-                  className="rounded-pill bg-white px-4 py-1.5 text-sm font-bold text-brand-blue disabled:opacity-60"
-                >
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditing(false)}
-                  className="rounded-pill bg-white/15 px-4 py-1.5 text-sm font-bold text-white"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          ) : (
-            p.bio && (
-              <p className="mt-3 text-[15px] leading-6 text-white/90">
-                {p.bio}
-              </p>
-            )
+          {p.bio && (
+            <p className="mt-3 text-[15px] leading-6 text-white/90">{p.bio}</p>
           )}
 
           <div className="mt-4 grid grid-cols-3 gap-2">
@@ -177,7 +131,13 @@ export function ProfileView({
       </header>
 
       {p.isSelf && (
-        <div className="mt-3 px-4 lg:hidden md:px-0">
+        <div className="mt-3 flex items-center gap-4 px-4 md:px-0 lg:hidden">
+          <Link
+            href="/settings"
+            className="text-sm font-semibold text-brand-blue hover:underline"
+          >
+            Settings
+          </Link>
           <AccountControl authMode={authMode} />
         </div>
       )}

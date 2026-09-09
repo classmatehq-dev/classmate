@@ -17,11 +17,12 @@ export function AppRail() {
   // Not useful on the leaderboard itself.
   const showLeaderboard = pathname !== "/leaderboard";
 
-  // These screens want the full width.
+  // These screens don't want the context rail.
   if (
     pathname === "/messages" ||
     pathname.startsWith("/messages/") ||
-    pathname === "/notifications"
+    pathname === "/notifications" ||
+    pathname === "/settings"
   ) {
     return null;
   }
