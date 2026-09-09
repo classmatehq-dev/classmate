@@ -74,27 +74,19 @@ export function ProfileView({
 
   return (
     <div className="animate-rise">
-      <header className="overflow-hidden md:rounded-card md:border md:border-border">
-        <div className="bg-hero relative h-24">
+      <header className="overflow-hidden bg-surface max-md:border-b max-md:border-border md:rounded-card md:border md:border-border">
+        <div className="bg-hero relative h-20">
           <div className="bg-hero-dots absolute inset-0 opacity-50" />
-          <div className="absolute -right-6 -top-8 h-28 w-28 rounded-full bg-accent-yellow/25 blur-2xl" />
+          <div className="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-accent-yellow/25 blur-2xl" />
         </div>
-        <div className="bg-surface px-4 pb-5">
-          <div className="-mt-9 flex items-end gap-4">
-            <span className="rounded-full ring-4 ring-surface">
-              <Avatar username={p.username} src={p.avatarUrl} size={72} />
+
+        <div className="px-4 pb-5">
+          {/* avatar overlaps the banner; the name sits cleanly below it */}
+          <div className="-mt-11 flex items-end justify-between">
+            <span className="inline-flex rounded-full bg-surface p-1 shadow-card">
+              <Avatar username={p.username} src={p.avatarUrl} size={80} />
             </span>
-            <div className="min-w-0 flex-1 pb-1">
-              <h1 className="text-xl font-extrabold text-navy">
-                @{p.username}
-              </h1>
-              {p.gradeLevel && (
-                <p className="text-sm text-muted">
-                  {GRADE_LABEL[p.gradeLevel] ?? p.gradeLevel}
-                </p>
-              )}
-            </div>
-            <div className="pb-1">
+            <div className="pb-1.5">
               {p.isSelf ? (
                 <Button
                   size="sm"
@@ -104,7 +96,7 @@ export function ProfileView({
                     setEditing((v) => !v);
                   }}
                 >
-                  Edit
+                  Edit profile
                 </Button>
               ) : (
                 <Button
@@ -119,9 +111,18 @@ export function ProfileView({
             </div>
           </div>
 
+          <h1 className="mt-2.5 text-2xl font-extrabold text-navy">
+            @{p.username}
+          </h1>
+          {p.gradeLevel && (
+            <p className="text-sm font-medium text-muted">
+              {GRADE_LABEL[p.gradeLevel] ?? p.gradeLevel}
+            </p>
+          )}
+
           {editing ? (
             <form
-              className="mt-4"
+              className="mt-3"
               onSubmit={async (e) => {
                 e.preventDefault();
                 await updateProfile.mutateAsync({ bio: bio.trim() });
@@ -165,13 +166,16 @@ export function ProfileView({
             <Stat label="Following" value={p.followingCount} />
           </div>
 
-          <div className="mt-3">
-            {p.isSelf ? (
+          {p.isSelf ? (
+            // Desktop keeps sign-out in the sidebar; only surface it here on mobile.
+            <div className="mt-4 lg:hidden">
               <AccountControl authMode={authMode} />
-            ) : (
+            </div>
+          ) : (
+            <div className="mt-4">
               <ReportButton targetType="profile" targetId={p.id} />
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </header>
 
