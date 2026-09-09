@@ -17,6 +17,9 @@ export function AppRail() {
   // Not useful on the leaderboard itself.
   const showLeaderboard = pathname !== "/leaderboard";
 
+  // The messages screens want the full width for the thread.
+  if (pathname === "/messages" || pathname.startsWith("/messages/")) return null;
+
   const feed = useHomeFeed();
   const board = useLeaderboard({ enabled: showLeaderboard });
 

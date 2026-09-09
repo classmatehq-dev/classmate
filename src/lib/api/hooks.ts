@@ -383,7 +383,15 @@ export function useSendMessage(conversationId: string) {
         method: "POST",
         body,
       }),
-    onSuccess: () => {
+    // drop the real message straight into the thread so it feels instant
+    onSuccess: (message) => {
+      qc.setQueryData<ListMessagesResponse>(
+        messageKeys.messages(conversationId),
+        (prev) =>
+          prev && !prev.items.some((m) => m.id === message.id)
+            ? { ...prev, items: [...prev.items, message] }
+            : prev,
+      );
       qc.invalidateQueries({
         queryKey: messageKeys.messages(conversationId),
       });

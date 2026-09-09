@@ -25,9 +25,18 @@ export function NewChatView() {
 
   const pending = startDirect.isPending || createGroup.isPending;
 
+  function splitNames(raw: string): string[] {
+    return raw
+      .split(/[,\s]+/)
+      .map((s) => s.trim().replace(/^@/, ""))
+      .filter(Boolean);
+  }
+
   function addPerson() {
-    const name = personInput.trim().replace(/^@/, "");
-    if (name && !people.includes(name)) setPeople([...people, name]);
+    const names = splitNames(personInput);
+    if (names.length > 0) {
+      setPeople([...new Set([...people, ...names])]);
+    }
     setPersonInput("");
   }
 
@@ -39,9 +48,7 @@ export function NewChatView() {
         const convo = await startDirect.mutateAsync({ username });
         router.push(`/messages/${convo.id}`);
       } else {
-        const names = personInput.trim()
-          ? [...people, personInput.trim().replace(/^@/, "")]
-          : people;
+        const names = [...new Set([...people, ...splitNames(personInput)])];
         const convo = await createGroup.mutateAsync({
           title: groupName,
           usernames: names,
