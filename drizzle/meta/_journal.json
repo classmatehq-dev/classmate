@@ -8,6 +8,13 @@
       "when": 1788925305487,
       "tag": "0000_sturdy_ender_wiggin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788990993084,
+      "tag": "0001_curved_morlocks",
+      "breakpoints": true
     }
   ]
 }

@@ -22,6 +22,8 @@ export const RATE_RULES = {
   createComment: { limit: 60, windowMs: 60 * 60 * 1000 },
   helpfulVote: { limit: 120, windowMs: 60 * 60 * 1000 },
   report: { limit: 20, windowMs: 60 * 60 * 1000 },
+  sendMessage: { limit: 240, windowMs: 60 * 60 * 1000 },
+  startConversation: { limit: 30, windowMs: 60 * 60 * 1000 },
 } satisfies Record<string, RateRule>;
 
 export function enforceRateLimit(

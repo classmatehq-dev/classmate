@@ -85,6 +85,23 @@ export const reportStatusEnum = pgEnum("report_status", [
   "dismissed",
 ]);
 
+export const conversationKindEnum = pgEnum("conversation_kind", [
+  "direct",
+  "group",
+]);
+
+export const conversationMemberRoleEnum = pgEnum("conversation_member_role", [
+  "owner",
+  "member",
+]);
+
+export const conversationMemberStatusEnum = pgEnum(
+  "conversation_member_status",
+  ["active", "left", "removed"],
+);
+
+export const messageStatusEnum = pgEnum("message_status", ["active", "deleted"]);
+
 const timestamps = {
   createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
@@ -359,6 +376,70 @@ export const blocks = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// Messaging  (1:1 direct conversations + group chats, text only)
+// ---------------------------------------------------------------------------
+
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    kind: conversationKindEnum().notNull(),
+    /** group chat name; null for direct conversations */
+    title: text(),
+    createdBy: uuid().references(() => users.id, { onDelete: "set null" }),
+    /**
+     * For direct conversations only: the two member ids sorted and joined as
+     * `"<a>:<b>"`. Guarantees one conversation per pair. Null for groups
+     * (Postgres lets a unique index hold many nulls).
+     */
+    directKey: text(),
+    /** bumped on every send so conversation lists sort by recency cheaply */
+    lastMessageAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+    /** denormalized snippet of the most recent message for the list view */
+    lastMessagePreview: text(),
+    ...timestamps,
+  },
+  (t) => [uniqueIndex("conversations_direct_key_key").on(t.directKey)],
+);
+
+export const conversationMembers = pgTable(
+  "conversation_members",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    conversationId: uuid()
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: conversationMemberRoleEnum().notNull().default("member"),
+    status: conversationMemberStatusEnum().notNull().default("active"),
+    /** advanced when the user opens the thread; drives unread counts */
+    lastReadAt: timestamp({ withTimezone: true }),
+    joinedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("conversation_members_conversation_user_key").on(
+      t.conversationId,
+      t.userId,
+    ),
+  ],
+);
+
+export const messages = pgTable("messages", {
+  id: uuid().primaryKey().defaultRandom(),
+  conversationId: uuid()
+    .notNull()
+    .references(() => conversations.id, { onDelete: "cascade" }),
+  senderId: uuid()
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  body: text().notNull(),
+  status: messageStatusEnum().notNull().default("active"),
+  createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+});
+
+// ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
 
@@ -429,6 +510,43 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
   replies: many(comments, { relationName: "comment_thread" }),
 }));
 
+export const conversationsRelations = relations(
+  conversations,
+  ({ one, many }) => ({
+    creator: one(users, {
+      fields: [conversations.createdBy],
+      references: [users.id],
+    }),
+    members: many(conversationMembers),
+    messages: many(messages),
+  }),
+);
+
+export const conversationMembersRelations = relations(
+  conversationMembers,
+  ({ one }) => ({
+    conversation: one(conversations, {
+      fields: [conversationMembers.conversationId],
+      references: [conversations.id],
+    }),
+    user: one(users, {
+      fields: [conversationMembers.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [messages.conversationId],
+    references: [conversations.id],
+  }),
+  sender: one(users, {
+    fields: [messages.senderId],
+    references: [users.id],
+  }),
+}));
+
 // ---------------------------------------------------------------------------
 // Inferred types
 // ---------------------------------------------------------------------------
@@ -443,3 +561,6 @@ export type Post = typeof posts.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
 export type HelpfulVote = typeof helpfulVotes.$inferSelect;
 export type Report = typeof reports.$inferSelect;
+export type Conversation = typeof conversations.$inferSelect;
+export type ConversationMember = typeof conversationMembers.$inferSelect;
+export type Message = typeof messages.$inferSelect;

@@ -7,6 +7,7 @@ import { AccountControl } from "@/components/account-control";
 import { Logo } from "@/components/logo";
 import { NotificationBell } from "@/components/notification-bell";
 import { Avatar, cx } from "@/components/ui";
+import { useUnreadCount } from "@/lib/api/hooks";
 
 type Item = {
   href: string;
@@ -41,6 +42,11 @@ const items: Item[] = [
     icon: icon("M21 21l-4.3-4.3|M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"),
   },
   {
+    href: "/messages",
+    label: "Messages",
+    icon: icon("M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5Z"),
+  },
+  {
     href: "/create",
     label: "Create",
     icon: icon("M12 5v14|M5 12h14"),
@@ -66,10 +72,15 @@ export function AppNav({
   authMode: "dev" | "clerk";
 }) {
   const pathname = usePathname();
+  const unread = useUnreadCount();
+  const unreadCount = unread.data?.count ?? 0;
   const isActive = (href: string) =>
     href === "/profile"
       ? pathname === "/profile" || pathname === `/u/${username}`
       : pathname === href || pathname.startsWith(`${href}/`);
+
+  // Messages lives in the mobile top bar instead of the crowded bottom nav.
+  const bottomNavItems = items.filter((i) => i.href !== "/messages");
 
   return (
     <>
@@ -108,6 +119,11 @@ export function AppNav({
               )}
               {item.icon}
               {item.label}
+              {item.href === "/messages" && unreadCount > 0 && (
+                <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-blue px-1.5 text-xs font-bold text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </Link>
           ),
         )}
@@ -129,12 +145,41 @@ export function AppNav({
       {/* Mobile top bar — fixed so it never becomes a flex sibling of content */}
       <header className="fixed inset-x-0 top-0 z-30 flex items-center justify-between border-b border-border bg-surface/90 px-4 py-2.5 backdrop-blur md:hidden">
         <Logo size={26} withWordmark />
-        <NotificationBell />
+        <div className="flex items-center gap-1">
+          <Link
+            href="/messages"
+            aria-label="Messages"
+            className={cx(
+              "relative rounded-full p-2",
+              isActive("/messages")
+                ? "text-brand-blue"
+                : "text-navy hover:bg-light-blue",
+            )}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5"
+            >
+              <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5Z" />
+            </svg>
+            {unreadCount > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-blue px-1 text-[10px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </Link>
+          <NotificationBell />
+        </div>
       </header>
 
       {/* Mobile bottom nav */}
       <nav className="fixed inset-x-0 bottom-0 z-20 flex items-stretch justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        {items.map((item) =>
+        {bottomNavItems.map((item) =>
           item.emphasized ? (
             <Link
               key={item.href}
