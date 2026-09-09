@@ -30,7 +30,7 @@ export function POST(
     const user = await requireUser();
     const { id } = await ctx.params;
     rateLimit("sendMessage", user.id);
-    const { body } = await readJson(req, sendMessageBody);
-    return sendMessage(id, user.id, body);
+    const { body, attachments } = await readJson(req, sendMessageBody);
+    return sendMessage(id, user.id, body, attachments);
   });
 }

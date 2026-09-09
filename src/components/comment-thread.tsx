@@ -2,6 +2,12 @@
 
 import { useMemo, useState } from "react";
 
+import {
+  AttachButton,
+  AttachmentDraftTray,
+  AttachmentList,
+  useAttachmentDraft,
+} from "@/components/attachments";
 import { Avatar, Button, cx, Textarea } from "@/components/ui";
 import { api } from "@/lib/api/client";
 import { useCreateComment, useDeleteComment } from "@/lib/api/hooks";
@@ -36,12 +42,17 @@ export function CommentThread({
   const tree = useMemo(() => buildTree(comments), [comments]);
   const createComment = useCreateComment(postId);
   const [body, setBody] = useState("");
+  const attachments = useAttachmentDraft();
 
   async function submitTop(e: React.FormEvent) {
     e.preventDefault();
-    if (!body.trim()) return;
-    await createComment.mutateAsync({ body: body.trim() });
+    if (!body.trim() && attachments.inputs.length === 0) return;
+    await createComment.mutateAsync({
+      body: body.trim(),
+      attachments: attachments.inputs,
+    });
     setBody("");
+    attachments.clear();
     onChanged();
   }
 
@@ -54,14 +65,21 @@ export function CommentThread({
           placeholder="Add a comment…"
           className="min-h-[64px]"
         />
-        <Button
-          type="submit"
-          size="sm"
-          className="mt-2"
-          disabled={createComment.isPending || !body.trim()}
-        >
-          Comment
-        </Button>
+        <AttachmentDraftTray draft={attachments} />
+        <div className="mt-2 flex items-center gap-2">
+          <AttachButton draft={attachments} />
+          <Button
+            type="submit"
+            size="sm"
+            disabled={
+              createComment.isPending ||
+              attachments.uploading ||
+              (!body.trim() && attachments.inputs.length === 0)
+            }
+          >
+            {attachments.uploading ? "Uploading…" : "Comment"}
+          </Button>
+        </div>
       </form>
 
       {tree.length === 0 ? (
@@ -100,6 +118,7 @@ function CommentItem({
   const deleteComment = useDeleteComment(postId);
   const [replying, setReplying] = useState(false);
   const [replyBody, setReplyBody] = useState("");
+  const replyAttachments = useAttachmentDraft();
   const [helpful, setHelpful] = useState(node.viewerHasMarkedHelpful);
   const [count, setCount] = useState(node.helpfulCount);
 
@@ -122,12 +141,14 @@ function CommentItem({
 
   async function submitReply(e: React.FormEvent) {
     e.preventDefault();
-    if (!replyBody.trim()) return;
+    if (!replyBody.trim() && replyAttachments.inputs.length === 0) return;
     await createComment.mutateAsync({
       body: replyBody.trim(),
       parentCommentId: node.id,
+      attachments: replyAttachments.inputs,
     });
     setReplyBody("");
+    replyAttachments.clear();
     setReplying(false);
     onChanged();
   }
@@ -145,9 +166,15 @@ function CommentItem({
         <span className="text-muted">· {relativeTime(node.createdAt)}</span>
       </div>
 
-      <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-6 text-navy">
-        {node.body}
-      </p>
+      {node.body && (
+        <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-6 text-navy">
+          {node.body}
+        </p>
+      )}
+
+      {node.attachments.length > 0 && (
+        <AttachmentList attachments={node.attachments} className="mt-2" />
+      )}
 
       <div className="mt-1.5 flex items-center gap-4 text-sm text-muted">
         <button
@@ -181,9 +208,15 @@ function CommentItem({
             className="min-h-[56px]"
             autoFocus
           />
-          <div className="mt-2 flex gap-2">
-            <Button type="submit" size="sm" disabled={createComment.isPending}>
-              Reply
+          <AttachmentDraftTray draft={replyAttachments} />
+          <div className="mt-2 flex items-center gap-2">
+            <AttachButton draft={replyAttachments} />
+            <Button
+              type="submit"
+              size="sm"
+              disabled={createComment.isPending || replyAttachments.uploading}
+            >
+              {replyAttachments.uploading ? "Uploading…" : "Reply"}
             </Button>
             <Button
               type="button"

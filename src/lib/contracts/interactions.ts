@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { attachmentDto, attachmentsInput } from "./attachments";
 import { contentStatus, postType } from "./common";
 
 // ---------------------------------------------------------------------------
@@ -22,11 +23,17 @@ export type HelpfulResponse = z.infer<typeof helpfulResponse>;
 // Posts
 // ---------------------------------------------------------------------------
 
-export const createPostBody = z.object({
-  body: z.string().trim().min(1, "Write something first.").max(5000),
-  type: postType.default("post"),
-  visibility: z.enum(["class", "public"]).default("class"),
-});
+export const createPostBody = z
+  .object({
+    body: z.string().trim().max(5000).default(""),
+    type: postType.default("post"),
+    visibility: z.enum(["class", "public"]).default("class"),
+    attachments: attachmentsInput,
+  })
+  .refine((d) => d.body.length > 0 || (d.attachments?.length ?? 0) > 0, {
+    message: "Write something or attach a file.",
+    path: ["body"],
+  });
 export type CreatePostBody = z.infer<typeof createPostBody>;
 
 export const updatePostBody = z.object({
@@ -59,6 +66,7 @@ export const postDto = z.object({
   viewerHasMarkedHelpful: z.boolean(),
   isAuthor: z.boolean(),
   author: postAuthorDto,
+  attachments: z.array(attachmentDto),
 });
 export type PostDto = z.infer<typeof postDto>;
 
@@ -72,10 +80,16 @@ export type ListPostsResponse = z.infer<typeof listPostsResponse>;
 // Comments
 // ---------------------------------------------------------------------------
 
-export const createCommentBody = z.object({
-  body: z.string().trim().min(1, "Write a comment first.").max(3000),
-  parentCommentId: z.string().uuid().optional(),
-});
+export const createCommentBody = z
+  .object({
+    body: z.string().trim().max(3000).default(""),
+    parentCommentId: z.string().uuid().optional(),
+    attachments: attachmentsInput,
+  })
+  .refine((d) => d.body.length > 0 || (d.attachments?.length ?? 0) > 0, {
+    message: "Write a comment or attach a file.",
+    path: ["body"],
+  });
 export type CreateCommentBody = z.infer<typeof createCommentBody>;
 
 export const updateCommentBody = z.object({
@@ -93,6 +107,7 @@ export const commentDto = z.object({
   viewerHasMarkedHelpful: z.boolean(),
   isAuthor: z.boolean(),
   author: postAuthorDto,
+  attachments: z.array(attachmentDto),
 });
 export type CommentDto = z.infer<typeof commentDto>;
 

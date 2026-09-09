@@ -9,6 +9,7 @@ import {
   sql,
 } from "drizzle-orm";
 
+import type { AttachmentDto, AttachmentInput } from "@/lib/contracts/attachments";
 import type {
   ConversationDto,
   ListConversationsResponse,
@@ -27,6 +28,10 @@ import {
 import { ApiError } from "@/server/http/errors";
 import { normalizeUsername } from "@/server/lib/normalize";
 import { decodeCursor, encodeCursor } from "@/server/lib/cursor";
+import {
+  loadAttachmentsMap,
+  persistAttachments,
+} from "@/server/modules/attachments/service";
 
 type ChatUser = { id: string; username: string; avatarUrl: string | null };
 
@@ -262,6 +267,7 @@ export async function getConversationDto(
 function toMessageDto(
   row: { message: typeof messages.$inferSelect; sender: ChatUser },
   viewerId: string,
+  attachments: AttachmentDto[] = [],
 ): MessageDto {
   return {
     id: row.message.id,
@@ -270,6 +276,7 @@ function toMessageDto(
     createdAt: row.message.createdAt.toISOString(),
     isMine: row.message.senderId === viewerId,
     sender: row.sender,
+    attachments,
   };
 }
 
@@ -305,6 +312,12 @@ export async function listMessages(
 
   const hasMore = rows.length > opts.limit;
   const page = hasMore ? rows.slice(0, opts.limit) : rows;
+
+  const attachmentsByMessage = await loadAttachmentsMap(
+    "message",
+    page.map((r) => r.message.id),
+  );
+
   const nextCursor =
     hasMore && page.length > 0
       ? encodeCursor({
@@ -326,6 +339,7 @@ export async function listMessages(
           },
         },
         viewerId,
+        attachmentsByMessage.get(r.message.id) ?? [],
       ),
     )
     .reverse();
@@ -445,6 +459,7 @@ export async function sendMessage(
   conversationId: string,
   viewerId: string,
   body: string,
+  attachmentInputs?: AttachmentInput[],
 ): Promise<MessageDto> {
   const { conversation } = await loadMembership(conversationId, viewerId);
 
@@ -458,6 +473,9 @@ export async function sendMessage(
   }
 
   const trimmed = body.trim();
+  if (!trimmed && (!attachmentInputs || attachmentInputs.length === 0)) {
+    throw ApiError.validation("Write a message or attach a file.");
+  }
   const now = new Date();
   const [row] = await db
     .insert(messages)
@@ -470,11 +488,24 @@ export async function sendMessage(
     })
     .returning();
 
+  const attachments = await persistAttachments(
+    "message",
+    row.id,
+    viewerId,
+    attachmentInputs,
+  );
+
+  const preview =
+    trimmed.slice(0, 140) ||
+    (attachments.length === 1
+      ? `📎 ${attachments[0].name}`
+      : `📎 ${attachments.length} attachments`);
+
   await db
     .update(conversations)
     .set({
       lastMessageAt: now,
-      lastMessagePreview: trimmed.slice(0, 140),
+      lastMessagePreview: preview,
       updatedAt: now,
     })
     .where(eq(conversations.id, conversationId));
@@ -503,6 +534,7 @@ export async function sendMessage(
       },
     },
     viewerId,
+    attachments,
   );
 }
 

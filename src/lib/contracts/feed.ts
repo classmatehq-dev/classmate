@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { attachmentDto } from "./attachments";
 import { contentStatus, postType } from "./common";
 
 export const feedQuery = z.object({
@@ -32,6 +33,7 @@ export const feedItemDto = z.object({
   isAuthor: z.boolean(),
   author: feedAuthorDto,
   class: feedClassDto,
+  attachments: z.array(attachmentDto),
 });
 export type FeedItemDto = z.infer<typeof feedItemDto>;
 

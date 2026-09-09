@@ -39,6 +39,7 @@ import type {
   StartDirectBody,
   UnreadCountResponse,
 } from "@/lib/contracts/messages";
+import type { AttachmentInput } from "@/lib/contracts/attachments";
 
 export const qk = {
   me: ["me"] as const,
@@ -378,7 +379,7 @@ export function useUnreadCount() {
 export function useSendMessage(conversationId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { body: string }) =>
+    mutationFn: (body: { body?: string; attachments?: AttachmentInput[] }) =>
       api<MessageDto>(`/api/conversations/${conversationId}/messages`, {
         method: "POST",
         body,

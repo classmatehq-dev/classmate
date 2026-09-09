@@ -3,6 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import {
+  AttachButton,
+  AttachmentDraftTray,
+  useAttachmentDraft,
+} from "@/components/attachments";
 import { Button, cx, Field, Select, Textarea } from "@/components/ui";
 import { ApiClientError } from "@/lib/api/client";
 import { useCreatePost, useMyClasses } from "@/lib/api/hooks";
@@ -23,6 +28,7 @@ export function PostComposer({
   const [type, setType] = useState<PostType>("post");
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const attachments = useAttachmentDraft();
 
   const targetClassId = fixedClassId ?? classId;
   const createPost = useCreatePost(targetClassId);
@@ -34,13 +40,19 @@ export function PostComposer({
       setError("Choose a class first.");
       return;
     }
+    if (!body.trim() && attachments.inputs.length === 0) {
+      setError("Write something or attach a file.");
+      return;
+    }
     try {
       const post = await createPost.mutateAsync({
         body: body.trim(),
         type,
         visibility: "class",
+        attachments: attachments.inputs,
       });
       setBody("");
+      attachments.clear();
       if (onCreated) onCreated(post.id);
       else router.push(`/post/${post.id}`);
     } catch (err) {
@@ -94,18 +106,29 @@ export function PostComposer({
             ? "What do you want to ask your class?"
             : "Share notes, a study guide, or something useful…"
         }
-        required
       />
+
+      <AttachmentDraftTray draft={attachments} />
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <Button
-        type="submit"
-        disabled={createPost.isPending || body.trim().length === 0}
-        className={compact ? "mt-2" : undefined}
-      >
-        {createPost.isPending ? "Posting…" : "Post"}
-      </Button>
+      <div className={cx("flex items-center gap-2", compact && "mt-2")}>
+        <AttachButton draft={attachments} />
+        <Button
+          type="submit"
+          disabled={
+            createPost.isPending ||
+            attachments.uploading ||
+            (body.trim().length === 0 && attachments.inputs.length === 0)
+          }
+        >
+          {createPost.isPending
+            ? "Posting…"
+            : attachments.uploading
+              ? "Uploading…"
+              : "Post"}
+        </Button>
+      </div>
     </form>
   );
 }

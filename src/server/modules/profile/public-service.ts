@@ -15,6 +15,7 @@ import {
 } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 import { normalizeUsername } from "@/server/lib/normalize";
+import { loadAttachmentsMap } from "@/server/modules/attachments/service";
 import { getHelpfulReceived } from "@/server/modules/interactions/service";
 
 async function loadByUsername(username: string) {
@@ -147,6 +148,11 @@ export async function getProfilePosts(
     .orderBy(desc(posts.createdAt))
     .limit(30);
 
+  const attachmentsByPost = await loadAttachmentsMap(
+    "post",
+    rows.map((r) => r.post.id),
+  );
+
   return rows.map((r) => ({
     id: r.post.id,
     type: r.post.type,
@@ -159,6 +165,7 @@ export async function getProfilePosts(
     isAuthor: r.post.authorId === viewerId,
     author: { id: r.authorId, username: r.username, avatarUrl: r.avatarUrl },
     class: { id: r.classId, name: r.className, teacherName: r.teacherName },
+    attachments: attachmentsByPost.get(r.post.id) ?? [],
   }));
 }
 

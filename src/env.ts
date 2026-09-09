@@ -21,6 +21,7 @@ const raw = {
   ),
   CLERK_SECRET_KEY: clean(process.env.CLERK_SECRET_KEY),
   CLERK_CLOCK_SKEW_MS: clean(process.env.CLERK_CLOCK_SKEW_MS),
+  BLOB_READ_WRITE_TOKEN: clean(process.env.BLOB_READ_WRITE_TOKEN),
 };
 
 const schema = z.object({
@@ -33,6 +34,8 @@ const schema = z.object({
     .transform((v) => (v === "1" || v === "true" ? "1" : "0")),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1).optional(),
   CLERK_SECRET_KEY: z.string().min(1).optional(),
+  // Auto-added by Vercel when a Blob store is linked. Enables file uploads.
+  BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
   CLERK_CLOCK_SKEW_MS: z
     .string()
     .optional()
@@ -60,6 +63,9 @@ export const authDevBypass = env.AUTH_DEV_BYPASS === "1";
 export const clerkConfigured = Boolean(
   env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && env.CLERK_SECRET_KEY,
 );
+
+/** File uploads (message/post/comment attachments) need a Vercel Blob store. */
+export const blobConfigured = Boolean(env.BLOB_READ_WRITE_TOKEN);
 
 /** "dev" = local fake session; "clerk" = real Clerk auth. */
 export const authMode: "dev" | "clerk" = authDevBypass ? "dev" : "clerk";

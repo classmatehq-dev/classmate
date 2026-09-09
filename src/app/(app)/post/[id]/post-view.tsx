@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { AttachmentList } from "@/components/attachments";
 import { CommentThread } from "@/components/comment-thread";
 import { ReportButton } from "@/components/report-button";
 import { Avatar, Badge, cx, EmptyState, Spinner } from "@/components/ui";
@@ -117,9 +118,15 @@ export function PostView({ postId }: { postId: string }) {
           )}
         </div>
 
-        <p className="mt-3 whitespace-pre-wrap text-base leading-7 text-navy">
-          {p.body}
-        </p>
+        {p.body && (
+          <p className="mt-3 whitespace-pre-wrap text-base leading-7 text-navy">
+            {p.body}
+          </p>
+        )}
+
+        {p.attachments.length > 0 && (
+          <AttachmentList attachments={p.attachments} className="mt-3" />
+        )}
 
         <div className="mt-4 flex items-center gap-2 text-sm">
           <button

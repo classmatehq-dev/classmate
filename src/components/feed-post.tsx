@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { AttachmentList } from "@/components/attachments";
 import { Avatar, Badge, cx } from "@/components/ui";
 import { api, ApiClientError } from "@/lib/api/client";
 import { classColor } from "@/lib/class-color";
@@ -89,11 +90,17 @@ export function FeedPost({
         )}
       </div>
 
-      <Link href={`/post/${post.id}`} className="mt-3 block">
-        <p className="whitespace-pre-wrap text-base leading-7 text-navy">
-          {post.body}
-        </p>
-      </Link>
+      {post.body && (
+        <Link href={`/post/${post.id}`} className="mt-3 block">
+          <p className="whitespace-pre-wrap text-base leading-7 text-navy">
+            {post.body}
+          </p>
+        </Link>
+      )}
+
+      {post.attachments.length > 0 && (
+        <AttachmentList attachments={post.attachments} className="mt-3" />
+      )}
 
       <div className="mt-3 flex items-center gap-2 text-sm">
         <button

@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import {
+  AttachButton,
+  AttachmentDraftTray,
+  AttachmentList,
+  useAttachmentDraft,
+} from "@/components/attachments";
+import {
   Avatar,
   Button,
   cx,
@@ -38,6 +44,7 @@ export function ConversationView({
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  const attach = useAttachmentDraft();
 
   const items = messages.data?.items ?? [];
   const lastId = items.at(-1)?.id;
@@ -63,13 +70,15 @@ export function ConversationView({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (send.isPending) return;
+    if (send.isPending || attach.uploading) return;
     const body = draft.trim();
-    if (!body) return;
+    const attachments = attach.inputs;
+    if (!body && attachments.length === 0) return;
     setError(null);
     setDraft("");
+    attach.clear();
     try {
-      await send.mutateAsync({ body });
+      await send.mutateAsync({ body, attachments });
     } catch (err) {
       setDraft(body);
       setError(
@@ -191,7 +200,9 @@ export function ConversationView({
         {error && (
           <p className="mb-2 px-1 text-sm text-red-600">{error}</p>
         )}
+        <AttachmentDraftTray draft={attach} />
         <div className="flex items-end gap-2">
+          <AttachButton draft={attach} className="h-11 w-11" />
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -208,10 +219,14 @@ export function ConversationView({
           <Button
             type="submit"
             size="sm"
-            disabled={send.isPending || draft.trim().length === 0}
+            disabled={
+              send.isPending ||
+              attach.uploading ||
+              (draft.trim().length === 0 && attach.inputs.length === 0)
+            }
             className="h-11 shrink-0"
           >
-            Send
+            {attach.uploading ? "…" : "Send"}
           </Button>
         </div>
       </form>
@@ -238,16 +253,23 @@ function MessageBubble({
           @{message.sender.username}
         </span>
       )}
-      <div
-        className={cx(
-          "max-w-[78%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px]",
-          message.isMine
-            ? "rounded-br-sm bg-brand-blue text-white"
-            : "rounded-bl-sm bg-surface text-navy shadow-card",
-        )}
-      >
-        {message.body}
-      </div>
+      {message.body && (
+        <div
+          className={cx(
+            "max-w-[78%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-[15px]",
+            message.isMine
+              ? "rounded-br-sm bg-brand-blue text-white"
+              : "rounded-bl-sm bg-surface text-navy shadow-card",
+          )}
+        >
+          {message.body}
+        </div>
+      )}
+      {message.attachments.length > 0 && (
+        <div className="mt-1 max-w-[78%]">
+          <AttachmentList attachments={message.attachments} />
+        </div>
+      )}
       <span className="mx-1 mt-0.5 text-[11px] text-muted">
         {relativeTime(message.createdAt)}
       </span>

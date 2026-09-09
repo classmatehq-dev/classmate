@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { attachmentDto, attachmentsInput } from "./attachments";
+
 // ---------------------------------------------------------------------------
 // Shared
 // ---------------------------------------------------------------------------
@@ -56,6 +58,7 @@ export const messageDto = z.object({
   createdAt: z.string(),
   isMine: z.boolean(),
   sender: chatUserDto,
+  attachments: z.array(attachmentDto),
 });
 export type MessageDto = z.infer<typeof messageDto>;
 
@@ -96,9 +99,15 @@ export const createGroupBody = z.object({
 });
 export type CreateGroupBody = z.infer<typeof createGroupBody>;
 
-export const sendMessageBody = z.object({
-  body: z.string().trim().min(1, "Write a message first.").max(4000),
-});
+export const sendMessageBody = z
+  .object({
+    body: z.string().trim().max(4000).default(""),
+    attachments: attachmentsInput,
+  })
+  .refine((d) => d.body.length > 0 || (d.attachments?.length ?? 0) > 0, {
+    message: "Write a message or attach a file.",
+    path: ["body"],
+  });
 export type SendMessageBody = z.infer<typeof sendMessageBody>;
 
 export const addMembersBody = z.object({

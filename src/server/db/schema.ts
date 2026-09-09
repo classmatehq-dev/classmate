@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   type AnyPgColumn,
+  index,
   integer,
   pgEnum,
   pgTable,
@@ -101,6 +102,14 @@ export const conversationMemberStatusEnum = pgEnum(
 );
 
 export const messageStatusEnum = pgEnum("message_status", ["active", "deleted"]);
+
+export const attachmentOwnerEnum = pgEnum("attachment_owner", [
+  "message",
+  "post",
+  "comment",
+]);
+
+export const attachmentKindEnum = pgEnum("attachment_kind", ["image", "file"]);
 
 const timestamps = {
   createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
@@ -440,6 +449,38 @@ export const messages = pgTable("messages", {
 });
 
 // ---------------------------------------------------------------------------
+// Attachments  (polymorphic: images + files on messages / posts / comments)
+// ---------------------------------------------------------------------------
+
+export const attachments = pgTable(
+  "attachments",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    /** which kind of row this hangs off */
+    ownerType: attachmentOwnerEnum().notNull(),
+    /** id of that message / post / comment (no FK — polymorphic) */
+    ownerId: uuid().notNull(),
+    uploaderId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: attachmentKindEnum().notNull(),
+    /** public Blob URL */
+    url: text().notNull(),
+    /** Blob pathname — kept so the object can be deleted later */
+    pathname: text().notNull(),
+    /** original filename, shown in the UI */
+    name: text().notNull(),
+    contentType: text().notNull(),
+    size: integer().notNull(),
+    /** natural pixel size for images, so the UI can reserve space */
+    width: integer(),
+    height: integer(),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("attachments_owner_idx").on(t.ownerType, t.ownerId)],
+);
+
+// ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
 
@@ -564,3 +605,4 @@ export type Report = typeof reports.$inferSelect;
 export type Conversation = typeof conversations.$inferSelect;
 export type ConversationMember = typeof conversationMembers.$inferSelect;
 export type Message = typeof messages.$inferSelect;
+export type Attachment = typeof attachments.$inferSelect;

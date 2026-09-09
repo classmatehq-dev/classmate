@@ -1,5 +1,6 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 
+import type { AttachmentDto, AttachmentInput } from "@/lib/contracts/attachments";
 import type {
   ListPostsResponse,
   PostDto,
@@ -8,6 +9,11 @@ import { db } from "@/server/db";
 import { posts, users, type Post } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 import { decodeCursor, encodeCursor } from "@/server/lib/cursor";
+import {
+  listAttachmentsFor,
+  loadAttachmentsMap,
+  persistAttachments,
+} from "@/server/modules/attachments/service";
 import { requireActiveMembership } from "@/server/modules/classes/service";
 
 type AuthorRow = { id: string; username: string; avatarUrl: string | null };
@@ -17,6 +23,7 @@ function toDto(
   author: AuthorRow,
   viewerId: string,
   viewerHasMarkedHelpful: boolean,
+  attachments: AttachmentDto[],
 ): PostDto {
   return {
     id: post.id,
@@ -32,6 +39,7 @@ function toDto(
     viewerHasMarkedHelpful,
     isAuthor: post.authorId === viewerId,
     author,
+    attachments,
   };
 }
 
@@ -87,6 +95,11 @@ export async function listClassPosts(
   const hasMore = rows.length > params.limit;
   const page = hasMore ? rows.slice(0, params.limit) : rows;
 
+  const attachmentsByPost = await loadAttachmentsMap(
+    "post",
+    page.map((r) => r.post.id),
+  );
+
   const items = page.map((r) =>
     toDto(
       r.post,
@@ -97,6 +110,7 @@ export async function listClassPosts(
       },
       viewerId,
       Boolean(r.viewerHasMarkedHelpful),
+      attachmentsByPost.get(r.post.id) ?? [],
     ),
   );
 
@@ -134,6 +148,7 @@ export async function getPostDto(
     },
     viewerId,
     Boolean(marked),
+    await listAttachmentsFor("post", postId),
   );
 }
 
@@ -144,6 +159,7 @@ export async function createPost(
     body: string;
     type: "post" | "question";
     visibility: "class" | "public";
+    attachments?: AttachmentInput[];
   },
 ): Promise<PostDto> {
   await requireActiveMembership(viewerId, classId);
@@ -159,6 +175,8 @@ export async function createPost(
       status: "active",
     })
     .returning();
+
+  await persistAttachments("post", row.id, viewerId, input.attachments);
 
   return getPostDto(row.id, viewerId);
 }

@@ -1,9 +1,15 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 
+import type { AttachmentDto, AttachmentInput } from "@/lib/contracts/attachments";
 import type { CommentDto } from "@/lib/contracts/interactions";
 import { db } from "@/server/db";
 import { comments, posts, users, type Comment } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
+import {
+  listAttachmentsFor,
+  loadAttachmentsMap,
+  persistAttachments,
+} from "@/server/modules/attachments/service";
 import { loadAccessiblePost } from "@/server/modules/posts/service";
 
 type AuthorRow = { id: string; username: string; avatarUrl: string | null };
@@ -13,6 +19,7 @@ function toDto(
   author: AuthorRow,
   viewerId: string,
   marked: boolean,
+  attachments: AttachmentDto[],
 ): CommentDto {
   const deleted = c.status === "deleted";
   return {
@@ -28,6 +35,7 @@ function toDto(
     author: deleted
       ? { id: c.authorId, username: "deleted", avatarUrl: null }
       : author,
+    attachments: deleted ? [] : attachments,
   };
 }
 
@@ -62,28 +70,38 @@ export async function listComments(
       .filter((id): id is string => id != null),
   );
 
-  return rows
-    .filter(
-      (r) => r.comment.status !== "deleted" || hasChild.has(r.comment.id),
-    )
-    .map((r) =>
-      toDto(
-        r.comment,
-        {
-          id: r.authorId,
-          username: r.authorUsername,
-          avatarUrl: r.authorAvatarUrl,
-        },
-        viewerId,
-        Boolean(r.marked),
-      ),
-    );
+  const visible = rows.filter(
+    (r) => r.comment.status !== "deleted" || hasChild.has(r.comment.id),
+  );
+
+  const attachmentsByComment = await loadAttachmentsMap(
+    "comment",
+    visible.map((r) => r.comment.id),
+  );
+
+  return visible.map((r) =>
+    toDto(
+      r.comment,
+      {
+        id: r.authorId,
+        username: r.authorUsername,
+        avatarUrl: r.authorAvatarUrl,
+      },
+      viewerId,
+      Boolean(r.marked),
+      attachmentsByComment.get(r.comment.id) ?? [],
+    ),
+  );
 }
 
 export async function createComment(
   postId: string,
   viewerId: string,
-  input: { body: string; parentCommentId?: string },
+  input: {
+    body: string;
+    parentCommentId?: string;
+    attachments?: AttachmentInput[];
+  },
 ): Promise<CommentDto> {
   await loadAccessiblePost(postId, viewerId);
 
@@ -112,6 +130,13 @@ export async function createComment(
     .set({ commentCount: sql`${posts.commentCount} + 1`, updatedAt: new Date() })
     .where(eq(posts.id, postId));
 
+  const attachments = await persistAttachments(
+    "comment",
+    row.id,
+    viewerId,
+    input.attachments,
+  );
+
   const author = await db.query.users.findFirst({
     where: (u, { eq }) => eq(u.id, viewerId),
   });
@@ -121,6 +146,7 @@ export async function createComment(
     { id: author!.id, username: author!.username, avatarUrl: author!.avatarUrl },
     viewerId,
     false,
+    attachments,
   );
 }
 
@@ -153,6 +179,7 @@ export async function updateComment(
     { id: author!.id, username: author!.username, avatarUrl: author!.avatarUrl },
     viewerId,
     false,
+    await listAttachmentsFor("comment", commentId),
   );
 }
 

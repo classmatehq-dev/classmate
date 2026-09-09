@@ -11,6 +11,7 @@ import {
   users,
 } from "@/server/db/schema";
 import { decodeCursor, encodeCursor } from "@/server/lib/cursor";
+import { loadAttachmentsMap } from "@/server/modules/attachments/service";
 
 /**
  * Chronological feed of posts from the classes the user is an active member of.
@@ -88,6 +89,11 @@ export async function getHomeFeed(
   const hasMore = rows.length > params.limit;
   const page = hasMore ? rows.slice(0, params.limit) : rows;
 
+  const attachmentsByPost = await loadAttachmentsMap(
+    "post",
+    page.map((r) => r.id),
+  );
+
   const items: FeedItemDto[] = page.map((r) => ({
     id: r.id,
     type: r.type,
@@ -104,6 +110,7 @@ export async function getHomeFeed(
       avatarUrl: r.authorAvatarUrl,
     },
     class: { id: r.classId, name: r.className, teacherName: r.teacherName },
+    attachments: attachmentsByPost.get(r.id) ?? [],
   }));
 
   const last = page[page.length - 1];
