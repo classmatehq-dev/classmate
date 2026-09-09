@@ -7,7 +7,7 @@ import {
   classes,
   helpfulVotes,
   posts,
-  teachers,
+
   users,
 } from "@/server/db/schema";
 import { decodeCursor, encodeCursor } from "@/server/lib/cursor";
@@ -68,13 +68,12 @@ export async function getHomeFeed(
       authorAvatarUrl: users.avatarUrl,
       classId: classes.id,
       className: classes.name,
-      teacherName: teachers.displayName,
+      teacherName: classes.teacherName,
       viewerHasMarkedHelpful: viewerHelpful,
     })
     .from(posts)
     .innerJoin(users, eq(users.id, posts.authorId))
     .innerJoin(classes, eq(classes.id, posts.classId))
-    .innerJoin(teachers, eq(teachers.id, classes.teacherId))
     .where(
       and(
         inArray(posts.classId, memberClassIds),

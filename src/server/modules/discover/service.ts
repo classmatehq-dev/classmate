@@ -2,13 +2,7 @@ import { and, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 
 import type { DiscoverResponse } from "@/lib/contracts/discover";
 import { db } from "@/server/db";
-import {
-  classMemberships,
-  classes,
-  schools,
-  teachers,
-  users,
-} from "@/server/db/schema";
+import { classMemberships, classes, schools, users } from "@/server/db/schema";
 
 const activeMemberCount = sql<number>`(
   select count(*)::int from ${classMemberships} m
@@ -33,7 +27,7 @@ export async function discover(
           eq(classes.status, "active"),
           or(
             ilike(classes.name, `%${query}%`),
-            ilike(teachers.displayName, `%${query}%`),
+            ilike(classes.teacherName, `%${query}%`),
             ilike(schools.name, `%${query}%`),
           ),
         )
@@ -43,13 +37,12 @@ export async function discover(
     .select({
       id: classes.id,
       name: classes.name,
-      teacherName: teachers.displayName,
+      teacherName: classes.teacherName,
       schoolName: schools.name,
       state: schools.state,
       memberCount: activeMemberCount,
     })
     .from(classes)
-    .innerJoin(teachers, eq(teachers.id, classes.teacherId))
     .innerJoin(schools, eq(schools.id, classes.schoolId))
     .where(classFilter)
     .orderBy(desc(activeMemberCount), classes.name)

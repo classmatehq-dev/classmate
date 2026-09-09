@@ -275,7 +275,7 @@ function ClassCard({ klass }: { klass: MyClassDto }) {
             {klass.name}
           </p>
           <p className="line-clamp-1 text-[13px] text-muted">
-            {klass.teacherName}
+            {klass.teacherName ?? "Open to everyone"}
           </p>
           <p
             className="mt-auto pt-2 text-[13px] font-bold"

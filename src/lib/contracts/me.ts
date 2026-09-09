@@ -49,7 +49,7 @@ export type MeDto = z.infer<typeof meDto>;
 export const myClassDto = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  teacherName: z.string(),
+  teacherName: z.string().nullable(),
   schoolName: z.string(),
   newPostCount: z.number().int().nonnegative(),
   postCount: z.number().int().nonnegative(),

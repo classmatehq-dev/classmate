@@ -55,11 +55,20 @@ export function ClassFinder({
               className="flex items-center justify-between gap-3"
             >
               <div className="min-w-0">
-                <p className="truncate font-semibold text-navy">{klass.name}</p>
+                <p className="truncate font-semibold text-navy">
+                  {klass.name}
+                  {klass.teacher && (
+                    <span className="font-normal text-muted">
+                      {" "}
+                      · {klass.teacher.displayName}
+                    </span>
+                  )}
+                </p>
                 <p className="truncate text-sm text-muted">
-                  {klass.teacher.displayName}
+                  {klass.teacher
+                    ? "Teacher section"
+                    : "Open to everyone taking this subject"}
                   {klass.courseLevel && ` · ${klass.courseLevel}`}
-                  {klass.period && ` · ${klass.period}`}
                 </p>
                 <p className="text-xs text-muted">
                   {klass.memberCount}{" "}
@@ -113,7 +122,8 @@ export function JoinedBadges({ classes }: { classes: ClassDto[] }) {
     <div className="mb-4 flex flex-wrap gap-2">
       {classes.map((k) => (
         <Badge key={k.id} tone="blue">
-          ✓ {k.name} · {k.teacher.displayName}
+          ✓ {k.name}
+          {k.teacher ? ` · ${k.teacher.displayName}` : ""}
         </Badge>
       ))}
     </div>
@@ -133,7 +143,6 @@ function CreateClassForm({
   const [name, setName] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [courseLevel, setCourseLevel] = useState("");
-  const [period, setPeriod] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
@@ -143,9 +152,8 @@ function CreateClassForm({
       const res = await createClass.mutateAsync({
         schoolId,
         name: name.trim(),
-        teacherName: teacherName.trim(),
+        teacherName: teacherName.trim() || undefined,
         courseLevel: courseLevel.trim() || undefined,
-        period: period.trim() || undefined,
       });
       onCreated(res.class);
     } catch {
@@ -159,7 +167,7 @@ function CreateClassForm({
       className="mt-4 space-y-3 rounded-card border border-border bg-surface p-4"
     >
       <p className="text-sm font-semibold text-navy">Create a class</p>
-      <Field label="Class name">
+      <Field label="Class or subject">
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -168,31 +176,23 @@ function CreateClassForm({
           minLength={2}
         />
       </Field>
-      <Field label="Teacher">
+      <Field
+        label="Teacher (optional)"
+        hint="Leave blank to make it open to everyone taking this subject."
+      >
         <Input
           value={teacherName}
           onChange={(e) => setTeacherName(e.target.value)}
           placeholder="e.g. Mrs. Smith"
-          required
-          minLength={2}
         />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Course level (optional)">
-          <Input
-            value={courseLevel}
-            onChange={(e) => setCourseLevel(e.target.value)}
-            placeholder="11th Grade"
-          />
-        </Field>
-        <Field label="Period (optional)">
-          <Input
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            placeholder="3rd Period"
-          />
-        </Field>
-      </div>
+      <Field label="Course level (optional)">
+        <Input
+          value={courseLevel}
+          onChange={(e) => setCourseLevel(e.target.value)}
+          placeholder="11th Grade"
+        />
+      </Field>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={createClass.isPending}>

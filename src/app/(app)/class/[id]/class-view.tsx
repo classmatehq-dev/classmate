@@ -17,9 +17,11 @@ import { ApiClientError } from "@/lib/api/client";
 import {
   useClass,
   useClassPosts,
+  useClassSections,
   useJoinClass,
 } from "@/lib/api/hooks";
 import { classColor } from "@/lib/class-color";
+import type { ClassDto } from "@/lib/contracts/classes";
 
 const TABS = ["Posts", "Questions", "Study Sets", "Resources"] as const;
 type Tab = (typeof TABS)[number];
@@ -82,17 +84,29 @@ export function ClassView({ classId }: { classId: string }) {
             >
               ← Home
             </Link>
-            <h1 className="mt-2 text-2xl font-extrabold">{c.name}</h1>
+            <h1 className="mt-2 text-2xl font-extrabold">
+              {c.name}
+              {c.teacher && (
+                <span className="font-semibold text-white/80">
+                  {" "}
+                  · {c.teacher.displayName}
+                </span>
+              )}
+            </h1>
             <p className="mt-1 text-sm text-white/85">
-              {c.teacher.displayName} · {c.school.name}
+              {c.teacher
+                ? `${c.teacher.displayName}'s section`
+                : "Open to everyone taking this subject"}{" "}
+              · {c.school.name}
               {c.courseLevel && ` · ${c.courseLevel}`}
-              {c.period && ` · ${c.period}`}
             </p>
             <span className="mt-3 inline-flex items-center rounded-pill bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
               {c.memberCount} {c.memberCount === 1 ? "member" : "members"}
             </span>
           </div>
         </div>
+
+        <SectionSwitcher classId={classId} current={c} />
       </header>
 
       {/* Tabs */}
@@ -177,7 +191,7 @@ export function ClassView({ classId }: { classId: string }) {
                     class: {
                       id: c.id,
                       name: c.name,
-                      teacherName: c.teacher.displayName,
+                      teacherName: c.teacher?.displayName ?? null,
                     },
                   }}
                   onChanged={() => posts.refetch()}
@@ -194,6 +208,42 @@ export function ClassView({ classId }: { classId: string }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/** lets you jump between the general room and each teacher's section */
+function SectionSwitcher({
+  classId,
+  current,
+}: {
+  classId: string;
+  current: ClassDto;
+}) {
+  const sections = useClassSections(classId);
+  const list = sections.data ?? [];
+  if (list.length === 0) return null;
+
+  const chip =
+    "shrink-0 rounded-pill px-3 py-1 text-xs font-bold transition-colors";
+
+  return (
+    <div className="scrollbar-none mt-2 flex items-center gap-1.5 overflow-x-auto px-4 md:px-0">
+      <span className="shrink-0 text-xs font-semibold text-muted">
+        Sections:
+      </span>
+      <span className={`${chip} bg-brand-blue text-white`}>
+        {current.teacher ? current.teacher.displayName : "Everyone"}
+      </span>
+      {list.map((s) => (
+        <Link
+          key={s.id}
+          href={`/class/${s.id}`}
+          className={`${chip} bg-surface text-navy hover:bg-light-blue`}
+        >
+          {s.teacher ? s.teacher.displayName : "Everyone"}
+        </Link>
+      ))}
     </div>
   );
 }

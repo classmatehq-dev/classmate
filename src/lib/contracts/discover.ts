@@ -9,7 +9,7 @@ export const discoverQuery = z.object({
 export const discoverClass = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  teacherName: z.string(),
+  teacherName: z.string().nullable(),
   schoolName: z.string(),
   state: z.string(),
   memberCount: z.number().int().nonnegative(),

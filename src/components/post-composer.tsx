@@ -60,7 +60,8 @@ export function PostComposer({
             <option value="">Choose a class…</option>
             {myClasses.data?.map((k) => (
               <option key={k.id} value={k.id}>
-                {k.name} · {k.teacherName}
+                {k.name}
+                {k.teacherName ? ` · ${k.teacherName}` : ""}
               </option>
             ))}
           </Select>

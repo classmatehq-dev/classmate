@@ -168,7 +168,11 @@ export const teachers = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// Classes  (identified by school + teacher + name + optional period)
+// Classes
+//
+// A class is a subject at a school ("Algebra II" at Marble Falls HS). It may
+// optionally be tied to a teacher ("Algebra II · Ms. Smith") — a teacher-less
+// class is the general room anyone taking that subject can join.
 // ---------------------------------------------------------------------------
 
 export const classes = pgTable(
@@ -178,16 +182,16 @@ export const classes = pgTable(
     schoolId: uuid()
       .notNull()
       .references(() => schools.id, { onDelete: "cascade" }),
-    teacherId: uuid()
-      .notNull()
-      .references(() => teachers.id, { onDelete: "cascade" }),
+    /** null = open to everyone taking this subject, regardless of teacher */
+    teacherId: uuid().references(() => teachers.id, { onDelete: "set null" }),
     name: text().notNull(),
     normalizedName: text().notNull(),
+    /** denormalized teacher display name ("" when no teacher) */
+    teacherName: text(),
+    /** normalized teacher name, "" when none — keeps the identity index clean */
+    normalizedTeacherName: text().notNull().default(""),
     courseLevel: text(),
     normalizedCourseLevel: text(),
-    period: text(),
-    /** "" when no period, so the uniqueness index below behaves */
-    normalizedPeriod: text().notNull().default(""),
     status: listingStatusEnum().notNull().default("active"),
     createdBy: uuid().references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
@@ -195,9 +199,8 @@ export const classes = pgTable(
   (t) => [
     uniqueIndex("classes_identity_key").on(
       t.schoolId,
-      t.teacherId,
       t.normalizedName,
-      t.normalizedPeriod,
+      t.normalizedTeacherName,
     ),
   ],
 );

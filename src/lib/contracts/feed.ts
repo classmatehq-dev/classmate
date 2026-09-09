@@ -17,7 +17,7 @@ export const feedAuthorDto = z.object({
 export const feedClassDto = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  teacherName: z.string(),
+  teacherName: z.string().nullable(),
 });
 
 export const feedItemDto = z.object({

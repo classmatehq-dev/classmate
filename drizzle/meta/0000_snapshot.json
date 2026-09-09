@@ -1,5 +1,5 @@
 {
-  "id": "814c0670-3371-4837-b819-69b4cc3f24bc",
+  "id": "a7327ee2-fecf-4e26-9025-ca48a9f9a7f3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -223,7 +223,7 @@
           "name": "teacher_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "name": {
           "name": "name",
@@ -237,6 +237,19 @@
           "primaryKey": false,
           "notNull": true
         },
+        "teacher_name": {
+          "name": "teacher_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "normalized_teacher_name": {
+          "name": "normalized_teacher_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
         "course_level": {
           "name": "course_level",
           "type": "text",
@@ -248,19 +261,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
-        },
-        "period": {
-          "name": "period",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "normalized_period": {
-          "name": "normalized_period",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
         },
         "status": {
           "name": "status",
@@ -302,19 +302,13 @@
               "nulls": "last"
             },
             {
-              "expression": "teacher_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
               "expression": "normalized_name",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "normalized_period",
+              "expression": "normalized_teacher_name",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -350,7 +344,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "set null",
           "onUpdate": "no action"
         },
         "classes_created_by_users_id_fk": {

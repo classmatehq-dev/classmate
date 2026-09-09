@@ -108,6 +108,14 @@ export function useClass(id: string | undefined) {
   });
 }
 
+export function useClassSections(id: string | undefined) {
+  return useQuery({
+    queryKey: ["classes", id, "sections"],
+    queryFn: () => api<ClassDto[]>(`/api/classes/${id}/sections`),
+    enabled: Boolean(id),
+  });
+}
+
 export function useCreateClass() {
   const qc = useQueryClient();
   return useMutation({
@@ -117,7 +125,6 @@ export function useCreateClass() {
       teacherId?: string;
       teacherName?: string;
       courseLevel?: string;
-      period?: string;
     }) =>
       api<{ class: ClassDto; created: boolean }>("/api/classes", {
         method: "POST",

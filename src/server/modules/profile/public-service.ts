@@ -11,7 +11,6 @@ import {
   classes,
   follows,
   posts,
-  teachers,
   users,
 } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
@@ -129,7 +128,7 @@ export async function getProfilePosts(
       avatarUrl: users.avatarUrl,
       classId: classes.id,
       className: classes.name,
-      teacherName: teachers.displayName,
+      teacherName: classes.teacherName,
       marked: sql<boolean>`exists (
         select 1 from helpful_votes hv
         where hv.user_id = ${viewerId} and hv.target_type = 'post' and hv.target_id = ${posts.id}
@@ -138,7 +137,6 @@ export async function getProfilePosts(
     .from(posts)
     .innerJoin(users, eq(users.id, posts.authorId))
     .innerJoin(classes, eq(classes.id, posts.classId))
-    .innerJoin(teachers, eq(teachers.id, classes.teacherId))
     .where(
       and(
         eq(posts.authorId, user.id),

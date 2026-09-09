@@ -24,10 +24,10 @@ export default function AppleIcon() {
             strokeLinecap="round"
           />
           <path d="M19 33.5 10 44l14-4.2z" fill="#fff" />
-          <circle cx="20.5" cy="17.4" r="3.7" fill="#fff" />
-          <path d="M13.6 30.5a6.9 6.9 0 0 0 13.8 0z" fill="#fff" />
-          <circle cx="27.4" cy="20.2" r="3.2" fill="#FFC928" />
-          <path d="M21.4 31.5a6 6 0 0 0 12 0z" fill="#FFC928" />
+          <circle cx="19.6" cy="16" r="4.3" fill="#fff" />
+          <path d="M11.8 31c0-6.2 3.5-9.8 7.8-9.8s7.8 3.6 7.8 9.8z" fill="#fff" />
+          <circle cx="27.6" cy="19" r="3.7" fill="#FFC928" />
+          <path d="M21.3 32c0-5.4 2.8-8.5 6.3-8.5s6.3 3.1 6.3 8.5z" fill="#FFC928" />
         </svg>
       </div>
     ),

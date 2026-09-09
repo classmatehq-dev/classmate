@@ -9,7 +9,6 @@ import {
   classes,
   posts,
   schools,
-  teachers,
   users,
   type User,
 } from "@/server/db/schema";
@@ -150,7 +149,7 @@ export async function listMyClasses(userId: string): Promise<MyClassDto[]> {
     .select({
       id: classes.id,
       name: classes.name,
-      teacherName: teachers.displayName,
+      teacherName: classes.teacherName,
       schoolName: schools.name,
       lastSeenAt: classMemberships.lastSeenAt,
       newPostCount,
@@ -158,7 +157,6 @@ export async function listMyClasses(userId: string): Promise<MyClassDto[]> {
     })
     .from(classMemberships)
     .innerJoin(classes, eq(classes.id, classMemberships.classId))
-    .innerJoin(teachers, eq(teachers.id, classes.teacherId))
     .innerJoin(schools, eq(schools.id, classes.schoolId))
     .where(
       and(
@@ -167,7 +165,7 @@ export async function listMyClasses(userId: string): Promise<MyClassDto[]> {
         ne(classes.status, "hidden"),
       ),
     )
-    .orderBy(teachers.displayName, classes.name);
+    .orderBy(classes.name);
 
   return rows.map((r) => ({
     id: r.id,

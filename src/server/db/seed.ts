@@ -2,7 +2,6 @@ import { and, eq, sql } from "drizzle-orm";
 
 import {
   normalizeName,
-  normalizeOptional,
   normalizeText,
   normalizeUsername,
 } from "@/server/lib/normalize";
@@ -101,20 +100,20 @@ async function getOrCreateUser(opts: {
 
 async function getOrCreateClass(opts: {
   schoolId: string;
-  teacherId: string;
+  teacher?: { id: string; displayName: string };
   name: string;
   courseLevel?: string;
-  period?: string;
   createdBy: string;
 }) {
   const normalizedNameValue = normalizeText(opts.name);
-  const normalizedPeriod = normalizeOptional(opts.period);
+  const normalizedTeacherName = opts.teacher
+    ? normalizeName(opts.teacher.displayName)
+    : "";
   const existing = await db.query.classes.findFirst({
     where: and(
       eq(classes.schoolId, opts.schoolId),
-      eq(classes.teacherId, opts.teacherId),
       eq(classes.normalizedName, normalizedNameValue),
-      eq(classes.normalizedPeriod, normalizedPeriod),
+      eq(classes.normalizedTeacherName, normalizedTeacherName),
     ),
   });
   if (existing) return existing;
@@ -122,15 +121,15 @@ async function getOrCreateClass(opts: {
     .insert(classes)
     .values({
       schoolId: opts.schoolId,
-      teacherId: opts.teacherId,
+      teacherId: opts.teacher?.id ?? null,
       name: opts.name,
       normalizedName: normalizedNameValue,
+      teacherName: opts.teacher?.displayName ?? null,
+      normalizedTeacherName,
       courseLevel: opts.courseLevel ?? null,
       normalizedCourseLevel: opts.courseLevel
         ? normalizeText(opts.courseLevel)
         : null,
-      period: opts.period ?? null,
-      normalizedPeriod,
       status: "active",
       createdBy: opts.createdBy,
       createdAt: ago(21),
@@ -231,7 +230,6 @@ async function main() {
 
   const smith = await getOrCreateTeacher(school.id, "Mrs. Smith");
   const johnson = await getOrCreateTeacher(school.id, "Mr. Johnson");
-  const davis = await getOrCreateTeacher(school.id, "Mrs. Davis");
   const lee = await getOrCreateTeacher(school.id, "Mr. Lee");
   const nguyen = await getOrCreateTeacher(school.id, "Ms. Nguyen");
 
@@ -262,41 +260,43 @@ async function main() {
   // --- classes ---
   const biology = await getOrCreateClass({
     schoolId: school.id,
-    teacherId: smith.id,
+    teacher: smith,
     name: "Biology",
     courseLevel: "11th Grade",
-    period: "3rd Period",
     createdBy: sarah.id,
   });
   const chemistry = await getOrCreateClass({
     schoolId: school.id,
-    teacherId: lee.id,
+    teacher: lee,
     name: "Chemistry",
     courseLevel: "10th Grade",
-    period: "2nd Period",
     createdBy: marcus.id,
   });
+  // open to everyone taking Algebra II, plus one teacher-specific section
   const algebra = await getOrCreateClass({
     schoolId: school.id,
-    teacherId: johnson.id,
+    name: "Algebra II",
+    courseLevel: "11th Grade",
+    createdBy: jacob.id,
+  });
+  await getOrCreateClass({
+    schoolId: school.id,
+    teacher: johnson,
     name: "Algebra II",
     courseLevel: "11th Grade",
     createdBy: jacob.id,
   });
   const english = await getOrCreateClass({
     schoolId: school.id,
-    teacherId: davis.id,
     name: "English III",
     courseLevel: "11th Grade",
-    period: "1st Period",
     createdBy: maria.id,
   });
   const history = await getOrCreateClass({
     schoolId: school.id,
-    teacherId: nguyen.id,
+    teacher: nguyen,
     name: "US History",
     courseLevel: "11th Grade",
-    period: "5th Period",
     createdBy: emma.id,
   });
 

@@ -29,13 +29,13 @@ CREATE TABLE "class_memberships" (
 CREATE TABLE "classes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"school_id" uuid NOT NULL,
-	"teacher_id" uuid NOT NULL,
+	"teacher_id" uuid,
 	"name" text NOT NULL,
 	"normalized_name" text NOT NULL,
+	"teacher_name" text,
+	"normalized_teacher_name" text DEFAULT '' NOT NULL,
 	"course_level" text,
 	"normalized_course_level" text,
-	"period" text,
-	"normalized_period" text DEFAULT '' NOT NULL,
 	"status" "listing_status" DEFAULT 'active' NOT NULL,
 	"created_by" uuid,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -133,7 +133,7 @@ ALTER TABLE "blocks" ADD CONSTRAINT "blocks_blocked_user_id_users_id_fk" FOREIGN
 ALTER TABLE "class_memberships" ADD CONSTRAINT "class_memberships_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "class_memberships" ADD CONSTRAINT "class_memberships_class_id_classes_id_fk" FOREIGN KEY ("class_id") REFERENCES "public"."classes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "classes" ADD CONSTRAINT "classes_school_id_schools_id_fk" FOREIGN KEY ("school_id") REFERENCES "public"."schools"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "classes" ADD CONSTRAINT "classes_teacher_id_teachers_id_fk" FOREIGN KEY ("teacher_id") REFERENCES "public"."teachers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "classes" ADD CONSTRAINT "classes_teacher_id_teachers_id_fk" FOREIGN KEY ("teacher_id") REFERENCES "public"."teachers"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "classes" ADD CONSTRAINT "classes_created_by_users_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comments" ADD CONSTRAINT "comments_post_id_posts_id_fk" FOREIGN KEY ("post_id") REFERENCES "public"."posts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "comments" ADD CONSTRAINT "comments_author_id_users_id_fk" FOREIGN KEY ("author_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -148,7 +148,7 @@ ALTER TABLE "teachers" ADD CONSTRAINT "teachers_school_id_schools_id_fk" FOREIGN
 ALTER TABLE "users" ADD CONSTRAINT "users_onboarding_school_id_schools_id_fk" FOREIGN KEY ("onboarding_school_id") REFERENCES "public"."schools"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "blocks_blocker_blocked_key" ON "blocks" USING btree ("blocker_user_id","blocked_user_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "class_memberships_user_class_key" ON "class_memberships" USING btree ("user_id","class_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "classes_identity_key" ON "classes" USING btree ("school_id","teacher_id","normalized_name","normalized_period");--> statement-breakpoint
+CREATE UNIQUE INDEX "classes_identity_key" ON "classes" USING btree ("school_id","normalized_name","normalized_teacher_name");--> statement-breakpoint
 CREATE UNIQUE INDEX "follows_follower_following_key" ON "follows" USING btree ("follower_user_id","following_user_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "helpful_votes_user_target_key" ON "helpful_votes" USING btree ("user_id","target_type","target_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "schools_normalized_name_state_key" ON "schools" USING btree ("normalized_name","state");--> statement-breakpoint

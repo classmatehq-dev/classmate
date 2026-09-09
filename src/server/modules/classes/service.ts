@@ -1,19 +1,10 @@
-import { and, asc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, asc, eq, ilike, ne, or, sql } from "drizzle-orm";
 
 import type { ClassDto } from "@/lib/contracts/classes";
 import { db } from "@/server/db";
-import {
-  classMemberships,
-  classes,
-  schools,
-  teachers,
-} from "@/server/db/schema";
+import { classMemberships, classes, schools, teachers } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
-import {
-  normalizeOptional,
-  normalizeName,
-  normalizeText,
-} from "@/server/lib/normalize";
+import { normalizeName, normalizeText } from "@/server/lib/normalize";
 
 const activeMemberCount = sql<number>`(
   select count(*)::int from ${classMemberships} m
@@ -23,7 +14,7 @@ const activeMemberCount = sql<number>`(
 type ClassRow = {
   klass: typeof classes.$inferSelect;
   school: typeof schools.$inferSelect;
-  teacher: typeof teachers.$inferSelect;
+  teacher: typeof teachers.$inferSelect | null;
   memberCount: number;
 };
 
@@ -37,10 +28,11 @@ function toDto(row: ClassRow): ClassDto {
       city: row.school.city,
       status: row.school.status,
     },
-    teacher: { id: row.teacher.id, displayName: row.teacher.displayName },
+    teacher: row.teacher
+      ? { id: row.teacher.id, displayName: row.teacher.displayName }
+      : null,
     name: row.klass.name,
     courseLevel: row.klass.courseLevel,
-    period: row.klass.period,
     memberCount: row.memberCount ?? 0,
     status: row.klass.status,
   };
@@ -67,7 +59,7 @@ export async function listClasses(params: {
   if (params.q && params.q.length > 0) {
     const like = `%${params.q}%`;
     filters.push(
-      or(ilike(classes.name, like), ilike(teachers.displayName, like)),
+      or(ilike(classes.name, like), ilike(classes.teacherName, like)),
     );
   }
 
@@ -75,9 +67,13 @@ export async function listClasses(params: {
     .select(baseSelect)
     .from(classes)
     .innerJoin(schools, eq(schools.id, classes.schoolId))
-    .innerJoin(teachers, eq(teachers.id, classes.teacherId))
+    .leftJoin(teachers, eq(teachers.id, classes.teacherId))
     .where(and(...filters))
-    .orderBy(asc(teachers.displayName), asc(classes.name))
+    // group by subject, general room first, then teacher sections alphabetically
+    .orderBy(
+      asc(classes.normalizedName),
+      asc(classes.normalizedTeacherName),
+    )
     .limit(params.limit);
 
   return rows.map(toDto);
@@ -88,49 +84,78 @@ export async function getClassDtoById(id: string): Promise<ClassDto | null> {
     .select(baseSelect)
     .from(classes)
     .innerJoin(schools, eq(schools.id, classes.schoolId))
-    .innerJoin(teachers, eq(teachers.id, classes.teacherId))
+    .leftJoin(teachers, eq(teachers.id, classes.teacherId))
     .where(eq(classes.id, id))
     .limit(1);
   return rows[0] ? toDto(rows[0]) : null;
 }
 
+/** teacher sections of the same subject at the same school (excluding `classId`) */
+export async function listSiblingSections(classId: string): Promise<ClassDto[]> {
+  const klass = await db.query.classes.findFirst({
+    where: (c, { eq }) => eq(c.id, classId),
+  });
+  if (!klass) return [];
+
+  const rows = await db
+    .select(baseSelect)
+    .from(classes)
+    .innerJoin(schools, eq(schools.id, classes.schoolId))
+    .leftJoin(teachers, eq(teachers.id, classes.teacherId))
+    .where(
+      and(
+        eq(classes.schoolId, klass.schoolId),
+        eq(classes.normalizedName, klass.normalizedName),
+        ne(classes.id, classId),
+        or(eq(classes.status, "active"), eq(classes.status, "pending")),
+      ),
+    )
+    .orderBy(asc(classes.normalizedTeacherName))
+    .limit(20);
+
+  return rows.map(toDto);
+}
+
+/**
+ * Resolve a teacher for a class. Returns null when no teacher was given (the
+ * class is then the general room for everyone taking the subject).
+ */
 async function resolveTeacher(opts: {
   schoolId: string;
   teacherId?: string;
   teacherName?: string;
-}): Promise<string> {
+}): Promise<{ id: string; displayName: string } | null> {
   if (opts.teacherId) {
     const t = await db.query.teachers.findFirst({
       where: (tt, { and, eq }) =>
         and(eq(tt.id, opts.teacherId!), eq(tt.schoolId, opts.schoolId)),
     });
     if (!t) throw ApiError.validation("That teacher isn't at this school.");
-    return t.id;
+    return { id: t.id, displayName: t.displayName };
   }
 
   const displayName = (opts.teacherName ?? "").trim();
-  const normalized = normalizeName(displayName);
-  if (normalized.length < 2) {
-    throw ApiError.validation("Enter a teacher name.");
-  }
+  if (displayName.length === 0) return null;
 
+  const normalized = normalizeName(displayName);
   const existing = await db.query.teachers.findFirst({
     where: (tt, { and, eq }) =>
       and(eq(tt.schoolId, opts.schoolId), eq(tt.normalizedName, normalized)),
   });
-  if (existing) return existing.id;
+  if (existing) {
+    return { id: existing.id, displayName: existing.displayName };
+  }
 
   const [created] = await db
     .insert(teachers)
     .values({ schoolId: opts.schoolId, displayName, normalizedName: normalized })
     .returning();
-  return created.id;
+  return { id: created.id, displayName: created.displayName };
 }
 
 /**
- * Create a class, or return the existing one if an identical class already
- * exists (same school + teacher + name + period). `created` tells the caller
- * which happened so it can pick the right membership role.
+ * Create a class, or return the existing one identified by
+ * (school + subject name + teacher). `created` tells the caller which happened.
  */
 export async function createOrGetClass(
   input: {
@@ -139,7 +164,6 @@ export async function createOrGetClass(
     teacherName?: string;
     name: string;
     courseLevel?: string;
-    period?: string;
   },
   createdByUserId: string,
 ): Promise<{ klass: ClassDto; created: boolean }> {
@@ -148,22 +172,21 @@ export async function createOrGetClass(
   });
   if (!school) throw ApiError.validation("Choose a valid school.");
 
-  const teacherId = await resolveTeacher({
+  const teacher = await resolveTeacher({
     schoolId: input.schoolId,
     teacherId: input.teacherId,
     teacherName: input.teacherName,
   });
 
   const normalizedNameValue = normalizeText(input.name);
-  const normalizedPeriod = normalizeOptional(input.period);
+  const normalizedTeacher = teacher ? normalizeName(teacher.displayName) : "";
 
   const existing = await db.query.classes.findFirst({
     where: (c, { and, eq }) =>
       and(
         eq(c.schoolId, input.schoolId),
-        eq(c.teacherId, teacherId),
         eq(c.normalizedName, normalizedNameValue),
-        eq(c.normalizedPeriod, normalizedPeriod),
+        eq(c.normalizedTeacherName, normalizedTeacher),
       ),
   });
   if (existing) {
@@ -175,15 +198,15 @@ export async function createOrGetClass(
     .insert(classes)
     .values({
       schoolId: input.schoolId,
-      teacherId,
+      teacherId: teacher?.id ?? null,
+      teacherName: teacher?.displayName ?? null,
+      normalizedTeacherName: normalizedTeacher,
       name: input.name.trim(),
       normalizedName: normalizedNameValue,
       courseLevel: input.courseLevel?.trim() || null,
       normalizedCourseLevel: input.courseLevel
         ? normalizeText(input.courseLevel)
         : null,
-      period: input.period?.trim() || null,
-      normalizedPeriod,
       status: "active",
       createdBy: createdByUserId,
     })
@@ -209,7 +232,6 @@ export async function joinClass(
     throw ApiError.notFound("We couldn't find that class.");
   }
 
-  // Central entitlement hook (Classmate+ / "one free class" lives here later).
   await assertCanJoinClass(userId, classId);
 
   const existing = await db.query.classMemberships.findFirst({

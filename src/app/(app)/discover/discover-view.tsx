@@ -62,7 +62,8 @@ export function DiscoverView({ initialQuery }: { initialQuery: string }) {
                   <Card interactive>
                     <p className="font-bold text-navy">{c.name}</p>
                     <p className="text-sm text-muted">
-                      {c.teacherName} · {c.schoolName}, {c.state}
+                      {c.teacherName ? `${c.teacherName} · ` : ""}
+                      {c.schoolName}, {c.state}
                     </p>
                     <p className="mt-1 text-xs font-semibold text-brand-blue">
                       {c.memberCount}{" "}

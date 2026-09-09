@@ -73,8 +73,12 @@ export function FeedPost({
             >
               {post.class.name}
             </Link>
-            <span className="font-medium">{post.class.teacherName}</span>
-            <span aria-hidden>·</span>
+            {post.class.teacherName && (
+              <>
+                <span className="font-medium">{post.class.teacherName}</span>
+                <span aria-hidden>·</span>
+              </>
+            )}
             <span>{relativeTime(post.createdAt)}</span>
           </div>
         </div>

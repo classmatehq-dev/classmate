@@ -5,6 +5,7 @@ import { schoolDto } from "./schools";
 
 export const listClassesQuery = z.object({
   schoolId: z.string().uuid("A school is required."),
+  /** narrow to one teacher's section (or "none" for the general room) */
   teacherId: z.string().uuid().optional(),
   q: z.string().trim().max(120).optional(),
   limit: limitParam,
@@ -20,10 +21,10 @@ export type TeacherDto = z.infer<typeof teacherDto>;
 export const classDto = z.object({
   id: z.string().uuid(),
   school: schoolDto,
-  teacher: teacherDto,
+  /** null = general room, open to everyone taking this subject */
+  teacher: teacherDto.nullable(),
   name: z.string(),
   courseLevel: z.string().nullable(),
-  period: z.string().nullable(),
   memberCount: z.number().int().nonnegative(),
   status: listingStatus,
 });
@@ -31,19 +32,14 @@ export type ClassDto = z.infer<typeof classDto>;
 
 export const listClassesResponse = z.array(classDto);
 
-export const createClassBody = z
-  .object({
-    schoolId: z.string().uuid(),
-    teacherId: z.string().uuid().optional(),
-    teacherName: z.string().trim().min(2).max(80).optional(),
-    name: z.string().trim().min(2, "Enter the class name.").max(80),
-    courseLevel: z.string().trim().max(60).optional(),
-    period: z.string().trim().max(40).optional(),
-  })
-  .refine((v) => v.teacherId != null || (v.teacherName != null && v.teacherName.length > 0), {
-    message: "Choose a teacher or enter a teacher name.",
-    path: ["teacherName"],
-  });
+export const createClassBody = z.object({
+  schoolId: z.string().uuid(),
+  // teacher is optional — a teacher-less class is the general room
+  teacherId: z.string().uuid().optional(),
+  teacherName: z.string().trim().min(2).max(80).optional(),
+  name: z.string().trim().min(2, "Enter the class or subject name.").max(80),
+  courseLevel: z.string().trim().max(60).optional(),
+});
 export type CreateClassBody = z.infer<typeof createClassBody>;
 
 export const classMembershipDto = z.object({
