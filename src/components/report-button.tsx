@@ -18,9 +18,12 @@ const CATEGORIES: { value: string; label: string }[] = [
 export function ReportButton({
   targetType,
   targetId,
+  light,
 }: {
   targetType: "post" | "comment" | "profile";
   targetId: string;
+  /** styled for a dark/coloured background */
+  light?: boolean;
 }) {
   const report = useReport();
   const [open, setOpen] = useState(false);
@@ -29,14 +32,22 @@ export function ReportButton({
   const [done, setDone] = useState(false);
 
   if (done) {
-    return <span className="text-sm text-muted">Reported — thank you.</span>;
+    return (
+      <span className={light ? "text-sm text-white/70" : "text-sm text-muted"}>
+        Reported — thank you.
+      </span>
+    );
   }
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="font-semibold text-muted hover:text-navy"
+        className={
+          light
+            ? "text-sm font-semibold text-white/70 hover:text-white"
+            : "text-sm font-semibold text-muted hover:text-navy"
+        }
       >
         Report
       </button>

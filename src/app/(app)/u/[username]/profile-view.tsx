@@ -8,11 +8,9 @@ import { FeedPost } from "@/components/feed-post";
 import { ReportButton } from "@/components/report-button";
 import {
   Avatar,
-  Button,
   cx,
   EmptyState,
   FeedSkeleton,
-  Field,
   Spinner,
   Textarea,
 } from "@/components/ui";
@@ -74,54 +72,57 @@ export function ProfileView({
 
   return (
     <div className="animate-rise">
-      <header className="overflow-hidden bg-surface max-md:border-b max-md:border-border md:rounded-card md:border md:border-border">
-        <div className="bg-hero relative h-24">
-          <div className="bg-hero-dots absolute inset-0 opacity-50" />
-        </div>
+      <header className="relative overflow-hidden bg-hero p-5 text-white shadow-blue-sm max-md:border-b max-md:border-brand-blue-700 md:rounded-card">
+        <div className="bg-hero-dots absolute inset-0 opacity-50" />
+        <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-accent-yellow/20 blur-2xl" />
 
-        <div className="px-4 pb-5">
-          {/* avatar sits on the banner edge, mostly in the white area below it */}
-          <div className="-mt-8 flex items-end justify-between">
-            <span className="inline-flex rounded-full bg-surface p-1.5 shadow-card ring-1 ring-border">
-              <Avatar username={p.username} src={p.avatarUrl} size={76} />
-            </span>
-            <div className="pb-1">
-              {p.isSelf ? (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    setBio(p.bio ?? "");
-                    setEditing((v) => !v);
-                  }}
-                >
-                  Edit profile
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant={p.viewerIsFollowing ? "secondary" : "primary"}
-                  disabled={follow.isPending}
-                  onClick={() => follow.mutate()}
-                >
-                  {p.viewerIsFollowing ? "Following" : "Follow"}
-                </Button>
-              )}
+        <div className="relative">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex shrink-0 rounded-full bg-white p-1 shadow-card">
+                <Avatar username={p.username} src={p.avatarUrl} size={64} />
+              </span>
+              <div className="min-w-0">
+                <h1 className="truncate text-2xl font-extrabold">
+                  @{p.username}
+                </h1>
+                {p.gradeLevel && (
+                  <p className="text-sm font-medium text-white/80">
+                    {GRADE_LABEL[p.gradeLevel] ?? p.gradeLevel}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
 
-          <h1 className="mt-3 text-2xl font-extrabold text-navy">
-            @{p.username}
-          </h1>
-          {p.gradeLevel && (
-            <p className="text-sm font-medium text-muted">
-              {GRADE_LABEL[p.gradeLevel] ?? p.gradeLevel}
-            </p>
-          )}
+            {p.isSelf ? (
+              <button
+                onClick={() => {
+                  setBio(p.bio ?? "");
+                  setEditing((v) => !v);
+                }}
+                className="shrink-0 rounded-pill bg-white/15 px-4 py-1.5 text-sm font-bold text-white backdrop-blur transition-colors hover:bg-white/25"
+              >
+                Edit profile
+              </button>
+            ) : (
+              <button
+                disabled={follow.isPending}
+                onClick={() => follow.mutate()}
+                className={cx(
+                  "shrink-0 rounded-pill px-4 py-1.5 text-sm font-bold transition-colors disabled:opacity-60",
+                  p.viewerIsFollowing
+                    ? "bg-white/15 text-white hover:bg-white/25"
+                    : "bg-white text-brand-blue hover:bg-white/90",
+                )}
+              >
+                {p.viewerIsFollowing ? "Following" : "Follow"}
+              </button>
+            )}
+          </div>
 
           {editing ? (
             <form
-              className="mt-3"
+              className="mt-4"
               onSubmit={async (e) => {
                 e.preventDefault();
                 await updateProfile.mutateAsync({ bio: bio.trim() });
@@ -129,54 +130,57 @@ export function ProfileView({
                 profile.refetch();
               }}
             >
-              <Field label="Bio">
-                <Textarea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  maxLength={280}
-                  className="min-h-[64px]"
-                />
-              </Field>
+              <Textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                maxLength={280}
+                placeholder="Add a short bio"
+                className="min-h-[64px] border-white/30 bg-white/10 text-white placeholder:text-white/60"
+              />
               <div className="mt-2 flex gap-2">
-                <Button
+                <button
                   type="submit"
-                  size="sm"
                   disabled={updateProfile.isPending}
+                  className="rounded-pill bg-white px-4 py-1.5 text-sm font-bold text-brand-blue disabled:opacity-60"
                 >
                   Save
-                </Button>
-                <Button
+                </button>
+                <button
                   type="button"
-                  size="sm"
-                  variant="secondary"
                   onClick={() => setEditing(false)}
+                  className="rounded-pill bg-white/15 px-4 py-1.5 text-sm font-bold text-white"
                 >
                   Cancel
-                </Button>
+                </button>
               </div>
             </form>
           ) : (
-            p.bio && <p className="mt-3 text-[15px] text-navy">{p.bio}</p>
+            p.bio && (
+              <p className="mt-3 text-[15px] leading-6 text-white/90">
+                {p.bio}
+              </p>
+            )
           )}
 
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <Stat label="Likes" value={p.helpfulReceived} highlight />
-            <Stat label="Followers" value={p.followersCount} />
-            <Stat label="Following" value={p.followingCount} />
+            <ProfileStat label="Likes" value={p.helpfulReceived} />
+            <ProfileStat label="Followers" value={p.followersCount} />
+            <ProfileStat label="Following" value={p.followingCount} />
           </div>
 
-          {p.isSelf ? (
-            // Desktop keeps sign-out in the sidebar; only surface it here on mobile.
-            <div className="mt-4 lg:hidden">
-              <AccountControl authMode={authMode} />
-            </div>
-          ) : (
-            <div className="mt-4">
-              <ReportButton targetType="profile" targetId={p.id} />
+          {!p.isSelf && (
+            <div className="mt-3">
+              <ReportButton targetType="profile" targetId={p.id} light />
             </div>
           )}
         </div>
       </header>
+
+      {p.isSelf && (
+        <div className="mt-3 px-4 lg:hidden md:px-0">
+          <AccountControl authMode={authMode} />
+        </div>
+      )}
 
       <div className="mt-4 flex gap-1 px-4 md:px-0">
         {TABS.map((t) => (
@@ -230,33 +234,11 @@ export function ProfileView({
   );
 }
 
-function Stat({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: number;
-  highlight?: boolean;
-}) {
+function ProfileStat({ label, value }: { label: string; value: number }) {
   return (
-    <div
-      className={cx(
-        "rounded-xl border px-3 py-2 text-center",
-        highlight
-          ? "border-transparent bg-brand-blue text-white"
-          : "border-border bg-background text-navy",
-      )}
-    >
-      <div className="text-lg font-extrabold">{value}</div>
-      <div
-        className={cx(
-          "text-xs font-semibold",
-          highlight ? "text-white/80" : "text-muted",
-        )}
-      >
-        {label}
-      </div>
+    <div className="rounded-xl bg-white/12 px-3 py-2 text-center backdrop-blur">
+      <div className="text-lg font-extrabold text-white">{value}</div>
+      <div className="text-xs font-semibold text-white/75">{label}</div>
     </div>
   );
 }
