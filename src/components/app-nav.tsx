@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { AccountControl } from "@/components/account-control";
 import { Logo } from "@/components/logo";
 import { NotificationBell } from "@/components/notification-bell";
-import { cx } from "@/components/ui";
+import { Avatar, cx } from "@/components/ui";
 
 type Item = {
   href: string;
@@ -112,8 +112,17 @@ export function AppNav({
           ),
         )}
 
-        <div className="mt-auto px-3 pt-4">
-          <AccountControl authMode={authMode} />
+        <div className="mt-auto space-y-3 border-t border-border px-3 pt-4">
+          <Link
+            href={`/u/${username}`}
+            className="flex items-center gap-2.5 rounded-pill px-1 py-1 hover:bg-light-blue/60"
+          >
+            <Avatar username={username} size={32} />
+            <span className="truncate text-sm font-bold text-navy">
+              @{username}
+            </span>
+          </Link>
+          <AccountControl authMode={authMode} className="px-2 text-sm font-semibold text-muted hover:text-navy" />
         </div>
       </nav>
 

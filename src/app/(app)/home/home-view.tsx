@@ -158,7 +158,7 @@ export function HomeView({ username }: { username: string }) {
             <Skeleton className="h-28 w-40 shrink-0 rounded-card" />
           </div>
         ) : classes.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto px-4 pb-2 md:px-0">
+          <div className="flex gap-3 overflow-x-auto px-4 pb-2 md:px-0 lg:flex-wrap lg:overflow-visible">
             {classes.map((k) => (
               <ClassCard key={k.id} klass={k} />
             ))}
@@ -188,9 +188,9 @@ export function HomeView({ username }: { username: string }) {
         )}
       </section>
 
-      {/* ---- Hot Today ---- */}
+      {/* ---- Hot Today (mobile/tablet only — desktop shows it in the rail) ---- */}
       {hot.length > 0 && (
-        <section className="mt-8">
+        <section className="mt-8 lg:hidden">
           <SectionHeading accent="yellow">Hot Today</SectionHeading>
           <div className="space-y-2 px-4 md:px-0">
             {hot.map((p, i) => (

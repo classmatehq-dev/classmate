@@ -301,10 +301,11 @@ export function useDiscover(q: string) {
   });
 }
 
-export function useLeaderboard() {
+export function useLeaderboard(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["leaderboard"],
     queryFn: () => api<LeaderboardResponse>("/api/leaderboard"),
+    enabled: options?.enabled ?? true,
   });
 }
 
