@@ -40,6 +40,10 @@ import type {
   UnreadCountResponse,
 } from "@/lib/contracts/messages";
 import type { AttachmentInput } from "@/lib/contracts/attachments";
+import type {
+  ListNotificationsResponse,
+  NotificationsUnreadResponse,
+} from "@/lib/contracts/notifications";
 
 export const qk = {
   me: ["me"] as const,
@@ -469,6 +473,48 @@ export function useLeaveConversation() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: messageKeys.conversations });
       qc.invalidateQueries({ queryKey: messageKeys.unread });
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+export const notificationKeys = {
+  list: ["notifications"] as const,
+  unread: ["notifications", "unread-count"] as const,
+};
+
+export function useNotifications(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: notificationKeys.list,
+    queryFn: () =>
+      api<ListNotificationsResponse>("/api/notifications", {
+        query: { limit: 30 },
+      }),
+    enabled: options?.enabled ?? true,
+    refetchInterval: 45000,
+  });
+}
+
+export function useNotificationsUnreadCount() {
+  return useQuery({
+    queryKey: notificationKeys.unread,
+    queryFn: () =>
+      api<NotificationsUnreadResponse>("/api/notifications/unread-count"),
+    refetchInterval: 30000,
+  });
+}
+
+export function useMarkNotificationsRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      api<{ ok: true }>("/api/notifications/read", { method: "POST" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: notificationKeys.unread });
+      qc.invalidateQueries({ queryKey: notificationKeys.list });
     },
   });
 }

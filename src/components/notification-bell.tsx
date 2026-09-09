@@ -1,50 +1,87 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
-export function NotificationBell() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+import { Avatar } from "@/components/ui";
+import { useNotificationsUnreadCount } from "@/lib/api/hooks";
+import type { NotificationDto } from "@/lib/contracts/notifications";
+import { relativeTime } from "@/lib/time";
 
-  useEffect(() => {
-    if (!open) return;
-    function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [open]);
+/**
+ * Bell icon + unread badge that links to the notifications page.
+ * (A dropdown would get clipped inside the home hero's `overflow-hidden`,
+ * and we already have a full-page list, so the bell just navigates.)
+ */
+export function NotificationBell({ className }: { className?: string }) {
+  const unread = useNotificationsUnreadCount();
+  const count = unread.data?.count ?? 0;
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Notifications"
-        className="rounded-full p-2 text-navy hover:bg-light-blue"
+    <Link
+      href="/notifications"
+      aria-label={`Notifications${count > 0 ? ` (${count} unread)` : ""}`}
+      className={`relative rounded-full p-2 text-navy hover:bg-light-blue ${
+        className ?? ""
+      }`}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-5 w-5"
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-5 w-5"
-        >
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="absolute right-0 z-30 mt-2 w-64 rounded-card border border-border bg-surface p-4 shadow-lg">
-          <p className="text-sm font-semibold text-navy">Notifications</p>
-          <p className="mt-1 text-sm text-muted">
-            You&apos;re all caught up. Alerts for new posts, comments, replies,
-            and follows are coming soon.
-          </p>
-        </div>
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </svg>
+      {count > 0 && (
+        <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+          {count > 9 ? "9+" : count}
+        </span>
       )}
-    </div>
+    </Link>
+  );
+}
+
+export function NotificationRow({
+  n,
+  onNavigate,
+}: {
+  n: NotificationDto;
+  onNavigate?: () => void;
+}) {
+  return (
+    <Link
+      href={n.href}
+      onClick={onNavigate}
+      className={`flex gap-3 px-4 py-3 transition-colors hover:bg-light-blue/50 ${
+        n.isRead ? "" : "bg-light-blue/30"
+      }`}
+    >
+      {n.actor ? (
+        <Avatar username={n.actor.username} src={n.actor.avatarUrl} size={36} />
+      ) : (
+        <span className="h-9 w-9 shrink-0 rounded-full bg-light-blue" />
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-sm text-navy">
+          <span className="font-bold">
+            {n.actor ? `@${n.actor.username}` : "Someone"}
+          </span>{" "}
+          {n.text}
+        </p>
+        {n.context && (
+          <p className="mt-0.5 truncate text-[13px] text-muted">
+            &ldquo;{n.context}&rdquo;
+          </p>
+        )}
+        <p className="mt-0.5 text-xs text-muted">{relativeTime(n.createdAt)}</p>
+      </div>
+      {!n.isRead && (
+        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-blue" />
+      )}
+    </Link>
   );
 }

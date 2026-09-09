@@ -17,6 +17,7 @@ import { ApiError } from "@/server/http/errors";
 import { normalizeUsername } from "@/server/lib/normalize";
 import { loadAttachmentsMap } from "@/server/modules/attachments/service";
 import { getHelpfulReceived } from "@/server/modules/interactions/service";
+import { notify } from "@/server/modules/notifications/service";
 
 async function loadByUsername(username: string) {
   const user = await db.query.users.findFirst({
@@ -196,6 +197,11 @@ export async function toggleFollow(
     } catch {
       /* unique race */
     }
+    await notify({
+      userId: target.id,
+      actorId: viewerId,
+      type: "follow",
+    });
   }
 
   return {

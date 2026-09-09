@@ -111,6 +111,14 @@ export const attachmentOwnerEnum = pgEnum("attachment_owner", [
 
 export const attachmentKindEnum = pgEnum("attachment_kind", ["image", "file"]);
 
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "comment_on_post",
+  "reply_to_comment",
+  "like_on_post",
+  "like_on_comment",
+  "follow",
+]);
+
 const timestamps = {
   createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
@@ -481,6 +489,32 @@ export const attachments = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// Notifications  (in-app activity: comments, replies, likes, follows)
+// ---------------------------------------------------------------------------
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    /** who receives it */
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /** who caused it (null if that account is gone) */
+    actorId: uuid().references(() => users.id, { onDelete: "cascade" }),
+    type: notificationTypeEnum().notNull(),
+    /** navigation target — a post (comments link to their post too) */
+    postId: uuid().references(() => posts.id, { onDelete: "cascade" }),
+    commentId: uuid().references(() => comments.id, { onDelete: "cascade" }),
+    /** denormalized snippet shown in the row */
+    context: text(),
+    readAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("notifications_user_idx").on(t.userId, t.createdAt)],
+);
+
+// ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
 
@@ -606,3 +640,4 @@ export type Conversation = typeof conversations.$inferSelect;
 export type ConversationMember = typeof conversationMembers.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type Attachment = typeof attachments.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;

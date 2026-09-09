@@ -10,6 +10,7 @@ import {
   loadAttachmentsMap,
   persistAttachments,
 } from "@/server/modules/attachments/service";
+import { notify } from "@/server/modules/notifications/service";
 import { loadAccessiblePost } from "@/server/modules/posts/service";
 
 type AuthorRow = { id: string; username: string; avatarUrl: string | null };
@@ -103,10 +104,11 @@ export async function createComment(
     attachments?: AttachmentInput[];
   },
 ): Promise<CommentDto> {
-  await loadAccessiblePost(postId, viewerId);
+  const post = await loadAccessiblePost(postId, viewerId);
 
+  let parent: typeof comments.$inferSelect | undefined;
   if (input.parentCommentId) {
-    const parent = await db.query.comments.findFirst({
+    parent = await db.query.comments.findFirst({
       where: (c, { eq }) => eq(c.id, input.parentCommentId!),
     });
     if (!parent || parent.postId !== postId) {
@@ -136,6 +138,28 @@ export async function createComment(
     viewerId,
     input.attachments,
   );
+
+  // notify the reply target and/or the post author (never yourself, no dupes)
+  if (parent) {
+    await notify({
+      userId: parent.authorId,
+      actorId: viewerId,
+      type: "reply_to_comment",
+      postId,
+      commentId: row.id,
+      context: input.body,
+    });
+  }
+  if (!parent || parent.authorId !== post.authorId) {
+    await notify({
+      userId: post.authorId,
+      actorId: viewerId,
+      type: "comment_on_post",
+      postId,
+      commentId: parent ? null : row.id,
+      context: input.body,
+    });
+  }
 
   const author = await db.query.users.findFirst({
     where: (u, { eq }) => eq(u.id, viewerId),

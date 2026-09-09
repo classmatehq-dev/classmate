@@ -7,6 +7,7 @@ import type {
 import { db } from "@/server/db";
 import { comments, helpfulVotes, posts, reports } from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
+import { notify } from "@/server/modules/notifications/service";
 import { loadAccessiblePost } from "@/server/modules/posts/service";
 
 /**
@@ -18,9 +19,15 @@ export async function toggleHelpful(
   targetType: "post" | "comment",
   targetId: string,
 ): Promise<HelpfulResponse> {
-  // access check + resolve the target's class
+  // access check + resolve the target's author / post for the notification
+  let targetAuthorId: string;
+  let targetPostId: string;
+  let targetBody: string;
   if (targetType === "post") {
-    await loadAccessiblePost(targetId, viewerId);
+    const post = await loadAccessiblePost(targetId, viewerId);
+    targetAuthorId = post.authorId;
+    targetPostId = post.id;
+    targetBody = post.body;
   } else {
     const comment = await db.query.comments.findFirst({
       where: (c, { eq }) => eq(c.id, targetId),
@@ -29,6 +36,9 @@ export async function toggleHelpful(
       throw ApiError.notFound("We couldn't find that comment.");
     }
     await loadAccessiblePost(comment.postId, viewerId);
+    targetAuthorId = comment.authorId;
+    targetPostId = comment.postId;
+    targetBody = comment.body;
   }
 
   const existing = await db.query.helpfulVotes.findFirst({
@@ -52,6 +62,14 @@ export async function toggleHelpful(
     } catch {
       // unique violation from a double-tap race — treat as already marked
     }
+    await notify({
+      userId: targetAuthorId,
+      actorId: viewerId,
+      type: targetType === "post" ? "like_on_post" : "like_on_comment",
+      postId: targetPostId,
+      commentId: targetType === "comment" ? targetId : null,
+      context: targetBody,
+    });
   }
 
   let count: number;
