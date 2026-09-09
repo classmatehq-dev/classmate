@@ -60,7 +60,7 @@ export function AppRail() {
       {/* Most helpful */}
       {showLeaderboard && (
         <RailCard
-          title="🏅 Most Helpful"
+          title="🏅 Most Liked"
           action={
             <Link
               href="/leaderboard"
@@ -100,7 +100,7 @@ export function AppRail() {
             </ul>
           ) : (
             <p className="text-[13px] text-muted">
-              Rankings appear as students mark each other Helpful.
+              Rankings appear as students like each other's posts.
             </p>
           )}
         </RailCard>

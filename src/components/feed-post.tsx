@@ -104,7 +104,7 @@ export function FeedPost({
           aria-pressed={helpful}
         >
           <span aria-hidden>👍</span> {count}
-          <span className="hidden sm:inline">Helpful</span>
+          <span className="hidden sm:inline">Likes</span>
         </button>
 
         <Link

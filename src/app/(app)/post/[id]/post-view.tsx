@@ -131,9 +131,12 @@ export function PostView({ postId }: { postId: string }) {
                 : "bg-light-blue/70 text-brand-blue hover:bg-light-blue",
             )}
           >
-            👍 {count} Helpful
+            👍 {count} {count === 1 ? "Like" : "Likes"}
           </button>
-          <span className="text-muted">💬 {p.commentCount}</span>
+          <span className="text-muted">
+            💬 {p.commentCount}{" "}
+            {p.commentCount === 1 ? "reply" : "replies"}
+          </span>
           {p.isAuthor ? (
             <button
               onClick={async () => {

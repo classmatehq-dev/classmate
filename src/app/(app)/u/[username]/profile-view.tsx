@@ -75,18 +75,17 @@ export function ProfileView({
   return (
     <div className="animate-rise">
       <header className="overflow-hidden bg-surface max-md:border-b max-md:border-border md:rounded-card md:border md:border-border">
-        <div className="bg-hero relative h-20">
+        <div className="bg-hero relative h-24">
           <div className="bg-hero-dots absolute inset-0 opacity-50" />
-          <div className="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-accent-yellow/25 blur-2xl" />
         </div>
 
         <div className="px-4 pb-5">
-          {/* avatar overlaps the banner; the name sits cleanly below it */}
-          <div className="-mt-11 flex items-end justify-between">
-            <span className="inline-flex rounded-full bg-surface p-1 shadow-card">
-              <Avatar username={p.username} src={p.avatarUrl} size={80} />
+          {/* avatar sits on the banner edge, mostly in the white area below it */}
+          <div className="-mt-8 flex items-end justify-between">
+            <span className="inline-flex rounded-full bg-surface p-1.5 shadow-card ring-1 ring-border">
+              <Avatar username={p.username} src={p.avatarUrl} size={76} />
             </span>
-            <div className="pb-1.5">
+            <div className="pb-1">
               {p.isSelf ? (
                 <Button
                   size="sm"
@@ -111,7 +110,7 @@ export function ProfileView({
             </div>
           </div>
 
-          <h1 className="mt-2.5 text-2xl font-extrabold text-navy">
+          <h1 className="mt-3 text-2xl font-extrabold text-navy">
             @{p.username}
           </h1>
           {p.gradeLevel && (
@@ -161,7 +160,7 @@ export function ProfileView({
           )}
 
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <Stat label="Helpful" value={p.helpfulReceived} highlight />
+            <Stat label="Likes" value={p.helpfulReceived} highlight />
             <Stat label="Followers" value={p.followersCount} />
             <Stat label="Following" value={p.followingCount} />
           </div>

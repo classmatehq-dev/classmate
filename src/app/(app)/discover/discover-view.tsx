@@ -96,7 +96,7 @@ export function DiscoverView({ initialQuery }: { initialQuery: string }) {
                     </div>
                     <span className="shrink-0 text-sm font-bold text-brand-blue">
                       {s.helpfulReceived}{" "}
-                      <span className="font-medium text-muted">Helpful</span>
+                      <span className="font-medium text-muted">Likes</span>
                     </span>
                   </Card>
                 </Link>

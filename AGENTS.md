@@ -24,7 +24,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Every protected API route resolves the current user server-side, then checks membership / ownership / visibility in the service layer. Never trust the client.
 - DB is snake_case, code is camelCase (drizzle `casing: "snake_case"`). After changing `src/server/db/schema.ts` run `npm run db:generate` then `npm run db:migrate`.
 - Classmate profile fields (username, gradeLevel, bio, avatar) live in our `users` table keyed by `clerkUserId` — never sent to Clerk signup.
-- "Helpful", never "Like". Content status: `active | hidden | deleted | under_review`.
+- User-facing label for the 👍 vote is **"Like" / "Likes"** (product owner changed this from the original "Helpful"). Code, DB columns and API fields stay `helpful*` — only display strings say "Like(s)". Content status: `active | hidden | deleted | under_review`.
 - Brand: blue `#1557D6` (dominant), yellow `#FFC928` (accent only), navy `#0B1F44`, light blue `#EAF2FF`. Mobile-first, rounded, bottom nav on mobile. Tokens in `src/app/globals.css`.
 - Design system: page headers use the `.bg-hero` blue gradient + `.bg-hero-dots` texture, white text, one yellow accent (glow / greeting). `shadow-card` on cards, `shadow-blue` / `shadow-blue-sm` for lift. Sections use the `SectionHeading` pattern (blue or yellow accent bar). Classes get a deterministic blue-shade colour via `classColor(id)` in `src/lib/class-color.ts` — use it for class chips/cards/headers. `.animate-rise` on top-level page containers. Keep it blue-dominant with gold as the single warm accent.
 - Run `npm run build` (typechecks too) after meaningful changes.

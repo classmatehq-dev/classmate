@@ -8,7 +8,7 @@ import { useLeaderboard } from "@/lib/api/hooks";
 import type { LeaderboardEntry } from "@/lib/contracts/leaderboard";
 
 const TABS = [
-  { key: "helpful", label: "Most Helpful", unit: "Helpful" },
+  { key: "helpful", label: "Most Liked", unit: "likes" },
   { key: "followed", label: "Most Followed", unit: "followers" },
 ] as const;
 
@@ -30,7 +30,7 @@ export function LeaderboardView() {
         <div className="relative">
           <h1 className="text-2xl font-extrabold">Leaderboard</h1>
           <p className="mt-1 text-[15px] text-white/90">
-            Students recognised for helping their classmates.
+            Students recognised for the posts and answers their classmates value.
           </p>
         </div>
       </header>
@@ -65,7 +65,7 @@ export function LeaderboardView() {
           <EmptyState
             icon="🏅"
             title="No rankings yet"
-            description="As students post, comment, and mark each other Helpful, the leaderboard fills in."
+            description="As students post and like each other's work, the leaderboard fills in."
           />
         )}
       </div>
