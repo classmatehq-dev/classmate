@@ -8,7 +8,8 @@ import {
   AttachmentDraftTray,
   useAttachmentDraft,
 } from "@/components/attachments";
-import { Button, cx, Field, Select, Textarea } from "@/components/ui";
+import { MentionInput } from "@/components/mention-input";
+import { Button, cx, Field, Select } from "@/components/ui";
 import { ApiClientError } from "@/lib/api/client";
 import { useCreatePost, useMyClasses } from "@/lib/api/hooks";
 import type { PostType } from "@/lib/contracts/common";
@@ -98,9 +99,10 @@ export function PostComposer({
         ))}
       </div>
 
-      <Textarea
+      <MentionInput
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={setBody}
+        classId={targetClassId || undefined}
         placeholder={
           type === "question"
             ? "What do you want to ask your class?"

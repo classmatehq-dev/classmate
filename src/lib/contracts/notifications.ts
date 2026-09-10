@@ -6,6 +6,7 @@ export const notificationType = z.enum([
   "like_on_post",
   "like_on_comment",
   "follow",
+  "mention",
 ]);
 export type NotificationType = z.infer<typeof notificationType>;
 

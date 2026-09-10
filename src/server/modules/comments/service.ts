@@ -10,6 +10,13 @@ import {
   loadAttachmentsMap,
   persistAttachments,
 } from "@/server/modules/attachments/service";
+import { listClassMemberUsers } from "@/server/modules/classes/service";
+import {
+  listMentionUsernamesFor,
+  loadMentionsMap,
+  resolveMentions,
+  storeMentions,
+} from "@/server/modules/mentions/service";
 import { notify } from "@/server/modules/notifications/service";
 import { loadAccessiblePost } from "@/server/modules/posts/service";
 
@@ -21,6 +28,7 @@ function toDto(
   viewerId: string,
   marked: boolean,
   attachments: AttachmentDto[],
+  mentions: string[],
 ): CommentDto {
   const deleted = c.status === "deleted";
   return {
@@ -37,6 +45,7 @@ function toDto(
       ? { id: c.authorId, username: "deleted", avatarUrl: null }
       : author,
     attachments: deleted ? [] : attachments,
+    mentions: deleted ? [] : mentions,
   };
 }
 
@@ -75,10 +84,11 @@ export async function listComments(
     (r) => r.comment.status !== "deleted" || hasChild.has(r.comment.id),
   );
 
-  const attachmentsByComment = await loadAttachmentsMap(
-    "comment",
-    visible.map((r) => r.comment.id),
-  );
+  const commentIds = visible.map((r) => r.comment.id);
+  const [attachmentsByComment, mentionsByComment] = await Promise.all([
+    loadAttachmentsMap("comment", commentIds),
+    loadMentionsMap("comment", commentIds),
+  ]);
 
   return visible.map((r) =>
     toDto(
@@ -91,6 +101,7 @@ export async function listComments(
       viewerId,
       Boolean(r.marked),
       attachmentsByComment.get(r.comment.id) ?? [],
+      mentionsByComment.get(r.comment.id) ?? [],
     ),
   );
 }
@@ -139,8 +150,28 @@ export async function createComment(
     input.attachments,
   );
 
-  // notify the reply target and/or the post author (never yourself, no dupes)
-  if (parent) {
+  // @mentions — class members only
+  const members = await listClassMemberUsers(post.classId);
+  const mentioned = await resolveMentions(
+    input.body,
+    members.map((m) => m.id),
+  );
+  await storeMentions("comment", row.id, mentioned);
+
+  // who we've already told, so nobody gets two pings for one comment
+  const notified = new Set<string>();
+  for (const u of mentioned) {
+    await notify({
+      userId: u.id,
+      actorId: viewerId,
+      type: "mention",
+      postId,
+      commentId: row.id,
+      context: input.body,
+    });
+    notified.add(u.id);
+  }
+  if (parent && !notified.has(parent.authorId)) {
     await notify({
       userId: parent.authorId,
       actorId: viewerId,
@@ -149,8 +180,9 @@ export async function createComment(
       commentId: row.id,
       context: input.body,
     });
+    notified.add(parent.authorId);
   }
-  if (!parent || parent.authorId !== post.authorId) {
+  if (!notified.has(post.authorId) && (!parent || parent.authorId !== post.authorId)) {
     await notify({
       userId: post.authorId,
       actorId: viewerId,
@@ -171,6 +203,7 @@ export async function createComment(
     viewerId,
     false,
     attachments,
+    await listMentionUsernamesFor("comment", row.id),
   );
 }
 
@@ -198,12 +231,17 @@ export async function updateComment(
   const author = await db.query.users.findFirst({
     where: (u, { eq }) => eq(u.id, viewerId),
   });
+  const [att, ment] = await Promise.all([
+    listAttachmentsFor("comment", commentId),
+    listMentionUsernamesFor("comment", commentId),
+  ]);
   return toDto(
     row,
     { id: author!.id, username: author!.username, avatarUrl: author!.avatarUrl },
     viewerId,
     false,
-    await listAttachmentsFor("comment", commentId),
+    att,
+    ment,
   );
 }
 

@@ -117,7 +117,10 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "like_on_post",
   "like_on_comment",
   "follow",
+  "mention",
 ]);
+
+export const mentionOwnerEnum = pgEnum("mention_owner", ["post", "comment"]);
 
 const timestamps = {
   createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
@@ -489,7 +492,50 @@ export const attachments = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// Notifications  (in-app activity: comments, replies, likes, follows)
+// Saved posts  (bookmarks)
+// ---------------------------------------------------------------------------
+
+export const savedPosts = pgTable(
+  "saved_posts",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    postId: uuid()
+      .notNull()
+      .references(() => posts.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("saved_posts_user_post_key").on(t.userId, t.postId)],
+);
+
+// ---------------------------------------------------------------------------
+// Mentions  (@username in a post or comment body)
+// ---------------------------------------------------------------------------
+
+export const mentions = pgTable(
+  "mentions",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    ownerType: mentionOwnerEnum().notNull(),
+    ownerId: uuid().notNull(),
+    mentionedUserId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("mentions_owner_user_key").on(
+      t.ownerType,
+      t.ownerId,
+      t.mentionedUserId,
+    ),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// Notifications  (in-app activity: comments, replies, likes, follows, mentions)
 // ---------------------------------------------------------------------------
 
 export const notifications = pgTable(
@@ -641,3 +687,5 @@ export type ConversationMember = typeof conversationMembers.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type Attachment = typeof attachments.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
+export type SavedPost = typeof savedPosts.$inferSelect;
+export type Mention = typeof mentions.$inferSelect;

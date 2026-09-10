@@ -16,11 +16,11 @@ import {
 import {
   useProfile,
   useProfilePosts,
+  useSavedPosts,
   useToggleFollow,
 } from "@/lib/api/hooks";
 
-const TABS = ["Posts", "Study Sets", "Resources"] as const;
-type Tab = (typeof TABS)[number];
+type Tab = "Posts" | "Saved" | "Study Sets" | "Resources";
 
 const GRADE_LABEL: Record<string, string> = {
   middle_school: "Middle school",
@@ -39,6 +39,8 @@ export function ProfileView({
   const posts = useProfilePosts(username);
   const follow = useToggleFollow(username);
   const [tab, setTab] = useState<Tab>("Posts");
+  const isSelf = profile.data?.isSelf ?? false;
+  const saved = useSavedPosts({ enabled: isSelf && tab === "Saved" });
 
   if (profile.isLoading) {
     return (
@@ -142,13 +144,20 @@ export function ProfileView({
         </div>
       )}
 
-      <div className="mt-4 flex gap-1 px-4 md:px-0">
-        {TABS.map((t) => (
+      <div className="scrollbar-none mt-4 flex gap-1 overflow-x-auto px-4 md:px-0">
+        {(
+          [
+            "Posts",
+            ...(p.isSelf ? (["Saved"] as const) : []),
+            "Study Sets",
+            "Resources",
+          ] as Tab[]
+        ).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cx(
-              "rounded-pill px-3.5 py-1.5 text-sm font-bold transition-colors",
+              "shrink-0 rounded-pill px-3.5 py-1.5 text-sm font-bold transition-colors",
               tab === t
                 ? "bg-brand-blue text-white shadow-blue-sm"
                 : "bg-surface text-muted hover:bg-light-blue/60",
@@ -160,7 +169,7 @@ export function ProfileView({
       </div>
 
       <div className="mt-4 space-y-3">
-        {tab !== "Posts" ? (
+        {tab === "Study Sets" || tab === "Resources" ? (
           <div className="px-4 md:px-0">
             <EmptyState
               icon={tab === "Study Sets" ? "🧠" : "📎"}
@@ -172,6 +181,26 @@ export function ProfileView({
               }
             />
           </div>
+        ) : tab === "Saved" ? (
+          saved.isLoading ? (
+            <FeedSkeleton count={2} />
+          ) : saved.data && saved.data.items.length > 0 ? (
+            saved.data.items.map((post) => (
+              <FeedPost
+                key={post.id}
+                post={post}
+                onChanged={() => saved.refetch()}
+              />
+            ))
+          ) : (
+            <div className="px-4 md:px-0">
+              <EmptyState
+                icon="🔖"
+                title="Nothing saved yet."
+                description="Tap Save on a post to keep it here for later."
+              />
+            </div>
+          )
         ) : posts.isLoading ? (
           <FeedSkeleton count={2} />
         ) : posts.data && posts.data.length > 0 ? (

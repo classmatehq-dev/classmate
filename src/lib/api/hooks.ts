@@ -40,6 +40,7 @@ import type {
   UnreadCountResponse,
 } from "@/lib/contracts/messages";
 import type { AttachmentInput } from "@/lib/contracts/attachments";
+import type { ClassMemberDto } from "@/lib/contracts/classes";
 import type {
   ListNotificationsResponse,
   NotificationsUnreadResponse,
@@ -516,6 +517,39 @@ export function useMarkNotificationsRead() {
       qc.invalidateQueries({ queryKey: notificationKeys.unread });
       qc.invalidateQueries({ queryKey: notificationKeys.list });
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Saved posts + class members (for @mentions)
+// ---------------------------------------------------------------------------
+
+export function useSavedPosts(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["me", "saved"] as const,
+    queryFn: () =>
+      api<FeedResponse>("/api/me/saved", { query: { limit: 20 } }),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useToggleSave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (postId: string) =>
+      api<{ saved: boolean }>(`/api/posts/${postId}/save`, { method: "POST" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["me", "saved"] });
+    },
+  });
+}
+
+export function useClassMembers(classId: string | undefined) {
+  return useQuery({
+    queryKey: ["classes", classId, "members"] as const,
+    queryFn: () => api<ClassMemberDto[]>(`/api/classes/${classId}/members`),
+    enabled: Boolean(classId),
+    staleTime: 60_000,
   });
 }
 

@@ -8,10 +8,12 @@ import {
   AttachmentList,
   useAttachmentDraft,
 } from "@/components/attachments";
-import { Avatar, Button, cx, Textarea } from "@/components/ui";
+import { MentionInput } from "@/components/mention-input";
+import { Avatar, Button, cx } from "@/components/ui";
 import { api } from "@/lib/api/client";
 import { useCreateComment, useDeleteComment } from "@/lib/api/hooks";
 import type { CommentDto } from "@/lib/contracts/interactions";
+import { renderBody } from "@/lib/mentions";
 import { relativeTime } from "@/lib/time";
 
 type Node = CommentDto & { replies: Node[] };
@@ -32,10 +34,12 @@ function buildTree(comments: CommentDto[]): Node[] {
 
 export function CommentThread({
   postId,
+  classId,
   comments,
   onChanged,
 }: {
   postId: string;
+  classId: string;
   comments: CommentDto[];
   onChanged: () => void;
 }) {
@@ -59,10 +63,11 @@ export function CommentThread({
   return (
     <div>
       <form onSubmit={submitTop} className="px-4 py-3 md:px-0">
-        <Textarea
+        <MentionInput
           value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Add a comment…"
+          onChange={setBody}
+          classId={classId}
+          placeholder="Add a comment…  (@ to mention a classmate)"
           className="min-h-[64px]"
         />
         <AttachmentDraftTray draft={attachments} />
@@ -93,6 +98,7 @@ export function CommentThread({
               key={node.id}
               node={node}
               postId={postId}
+              classId={classId}
               depth={0}
               onChanged={onChanged}
             />
@@ -106,11 +112,13 @@ export function CommentThread({
 function CommentItem({
   node,
   postId,
+  classId,
   depth,
   onChanged,
 }: {
   node: Node;
   postId: string;
+  classId: string;
   depth: number;
   onChanged: () => void;
 }) {
@@ -168,7 +176,7 @@ function CommentItem({
 
       {node.body && (
         <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-6 text-navy">
-          {node.body}
+          {renderBody(node.body, node.mentions)}
         </p>
       )}
 
@@ -201,9 +209,10 @@ function CommentItem({
 
       {replying && (
         <form onSubmit={submitReply} className="mt-2">
-          <Textarea
+          <MentionInput
             value={replyBody}
-            onChange={(e) => setReplyBody(e.target.value)}
+            onChange={setReplyBody}
+            classId={classId}
             placeholder={`Reply to @${node.author.username}…`}
             className="min-h-[56px]"
             autoFocus
@@ -237,6 +246,7 @@ function CommentItem({
               key={child.id}
               node={child}
               postId={postId}
+              classId={classId}
               depth={depth + 1}
               onChanged={onChanged}
             />

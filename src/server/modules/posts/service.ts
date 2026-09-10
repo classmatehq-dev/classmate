@@ -14,7 +14,18 @@ import {
   loadAttachmentsMap,
   persistAttachments,
 } from "@/server/modules/attachments/service";
-import { requireActiveMembership } from "@/server/modules/classes/service";
+import {
+  listClassMemberUsers,
+  requireActiveMembership,
+} from "@/server/modules/classes/service";
+import {
+  listMentionUsernamesFor,
+  loadMentionsMap,
+  resolveMentions,
+  storeMentions,
+} from "@/server/modules/mentions/service";
+import { notify } from "@/server/modules/notifications/service";
+import { isPostSaved, loadSavedSet } from "@/server/modules/saves/query";
 
 type AuthorRow = { id: string; username: string; avatarUrl: string | null };
 
@@ -22,8 +33,12 @@ function toDto(
   post: Post,
   author: AuthorRow,
   viewerId: string,
-  viewerHasMarkedHelpful: boolean,
-  attachments: AttachmentDto[],
+  opts: {
+    viewerHasMarkedHelpful: boolean;
+    viewerHasSaved: boolean;
+    attachments: AttachmentDto[];
+    mentions: string[];
+  },
 ): PostDto {
   return {
     id: post.id,
@@ -36,10 +51,12 @@ function toDto(
     updatedAt: post.updatedAt.toISOString(),
     helpfulCount: post.helpfulCount,
     commentCount: post.commentCount,
-    viewerHasMarkedHelpful,
+    viewerHasMarkedHelpful: opts.viewerHasMarkedHelpful,
+    viewerHasSaved: opts.viewerHasSaved,
     isAuthor: post.authorId === viewerId,
     author,
-    attachments,
+    attachments: opts.attachments,
+    mentions: opts.mentions,
   };
 }
 
@@ -95,10 +112,12 @@ export async function listClassPosts(
   const hasMore = rows.length > params.limit;
   const page = hasMore ? rows.slice(0, params.limit) : rows;
 
-  const attachmentsByPost = await loadAttachmentsMap(
-    "post",
-    page.map((r) => r.post.id),
-  );
+  const postIds = page.map((r) => r.post.id);
+  const [attachmentsByPost, mentionsByPost, savedSet] = await Promise.all([
+    loadAttachmentsMap("post", postIds),
+    loadMentionsMap("post", postIds),
+    loadSavedSet(viewerId, postIds),
+  ]);
 
   const items = page.map((r) =>
     toDto(
@@ -109,8 +128,12 @@ export async function listClassPosts(
         avatarUrl: r.authorAvatarUrl,
       },
       viewerId,
-      Boolean(r.viewerHasMarkedHelpful),
-      attachmentsByPost.get(r.post.id) ?? [],
+      {
+        viewerHasMarkedHelpful: Boolean(r.viewerHasMarkedHelpful),
+        viewerHasSaved: savedSet.has(r.post.id),
+        attachments: attachmentsByPost.get(r.post.id) ?? [],
+        mentions: mentionsByPost.get(r.post.id) ?? [],
+      },
     ),
   );
 
@@ -139,6 +162,12 @@ export async function getPostDto(
         eq(hv.targetId, postId),
       ),
   });
+  const [attachments, mentionUsernames, saved] = await Promise.all([
+    listAttachmentsFor("post", postId),
+    listMentionUsernamesFor("post", postId),
+    isPostSaved(viewerId, postId),
+  ]);
+
   return toDto(
     post,
     {
@@ -147,8 +176,12 @@ export async function getPostDto(
       avatarUrl: author!.avatarUrl,
     },
     viewerId,
-    Boolean(marked),
-    await listAttachmentsFor("post", postId),
+    {
+      viewerHasMarkedHelpful: Boolean(marked),
+      viewerHasSaved: saved,
+      attachments,
+      mentions: mentionUsernames,
+    },
   );
 }
 
@@ -177,6 +210,23 @@ export async function createPost(
     .returning();
 
   await persistAttachments("post", row.id, viewerId, input.attachments);
+
+  // @mentions — only people in the class, never yourself
+  const members = await listClassMemberUsers(classId);
+  const mentioned = await resolveMentions(
+    input.body,
+    members.map((m) => m.id),
+  );
+  await storeMentions("post", row.id, mentioned);
+  for (const u of mentioned) {
+    await notify({
+      userId: u.id,
+      actorId: viewerId,
+      type: "mention",
+      postId: row.id,
+      context: input.body,
+    });
+  }
 
   return getPostDto(row.id, viewerId);
 }

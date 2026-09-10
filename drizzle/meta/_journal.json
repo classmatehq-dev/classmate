@@ -29,6 +29,13 @@
       "when": 1788996903007,
       "tag": "0003_dizzy_khan",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788999199462,
+      "tag": "0004_brave_bloodstorm",
+      "breakpoints": true
     }
   ]
 }

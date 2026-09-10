@@ -77,6 +77,7 @@ const VERB: Record<NotificationType, string> = {
   like_on_post: "liked your post",
   like_on_comment: "liked your comment",
   follow: "started following you",
+  mention: "mentioned you",
 };
 
 function toDto(

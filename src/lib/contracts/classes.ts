@@ -55,3 +55,10 @@ export const joinClassResponse = z.object({
   class: classDto,
 });
 export type JoinClassResponse = z.infer<typeof joinClassResponse>;
+
+export const classMemberDto = z.object({
+  id: z.string().uuid(),
+  username: z.string(),
+  avatarUrl: z.string().nullable(),
+});
+export type ClassMemberDto = z.infer<typeof classMemberDto>;

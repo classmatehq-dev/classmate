@@ -30,10 +30,13 @@ export const feedItemDto = z.object({
   helpfulCount: z.number().int().nonnegative(),
   commentCount: z.number().int().nonnegative(),
   viewerHasMarkedHelpful: z.boolean(),
+  viewerHasSaved: z.boolean(),
   isAuthor: z.boolean(),
   author: feedAuthorDto,
   class: feedClassDto,
   attachments: z.array(attachmentDto),
+  /** canonical usernames mentioned in the body, for linkifying */
+  mentions: z.array(z.string()),
 });
 export type FeedItemDto = z.infer<typeof feedItemDto>;
 

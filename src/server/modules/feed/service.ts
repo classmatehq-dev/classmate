@@ -12,6 +12,8 @@ import {
 } from "@/server/db/schema";
 import { decodeCursor, encodeCursor } from "@/server/lib/cursor";
 import { loadAttachmentsMap } from "@/server/modules/attachments/service";
+import { loadMentionsMap } from "@/server/modules/mentions/service";
+import { loadSavedSet } from "@/server/modules/saves/query";
 
 /**
  * Chronological feed of posts from the classes the user is an active member of.
@@ -89,10 +91,12 @@ export async function getHomeFeed(
   const hasMore = rows.length > params.limit;
   const page = hasMore ? rows.slice(0, params.limit) : rows;
 
-  const attachmentsByPost = await loadAttachmentsMap(
-    "post",
-    page.map((r) => r.id),
-  );
+  const postIds = page.map((r) => r.id);
+  const [attachmentsByPost, mentionsByPost, savedSet] = await Promise.all([
+    loadAttachmentsMap("post", postIds),
+    loadMentionsMap("post", postIds),
+    loadSavedSet(userId, postIds),
+  ]);
 
   const items: FeedItemDto[] = page.map((r) => ({
     id: r.id,
@@ -103,6 +107,7 @@ export async function getHomeFeed(
     helpfulCount: r.helpfulCount,
     commentCount: r.commentCount,
     viewerHasMarkedHelpful: Boolean(r.viewerHasMarkedHelpful),
+    viewerHasSaved: savedSet.has(r.id),
     isAuthor: r.authorId === userId,
     author: {
       id: r.authorId,
@@ -111,6 +116,7 @@ export async function getHomeFeed(
     },
     class: { id: r.classId, name: r.className, teacherName: r.teacherName },
     attachments: attachmentsByPost.get(r.id) ?? [],
+    mentions: mentionsByPost.get(r.id) ?? [],
   }));
 
   const last = page[page.length - 1];

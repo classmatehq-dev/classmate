@@ -2,7 +2,13 @@ import { and, asc, eq, ilike, ne, or, sql } from "drizzle-orm";
 
 import type { ClassDto } from "@/lib/contracts/classes";
 import { db } from "@/server/db";
-import { classMemberships, classes, schools, teachers } from "@/server/db/schema";
+import {
+  classMemberships,
+  classes,
+  schools,
+  teachers,
+  users,
+} from "@/server/db/schema";
 import { ApiError } from "@/server/http/errors";
 import { normalizeName, normalizeText } from "@/server/lib/normalize";
 
@@ -270,6 +276,34 @@ export async function assertCanJoinClass(
 }
 
 /** Throws unless the user is an active member of the class. */
+export type ClassMemberUser = {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+};
+
+/** Active members of a class — used for @mention autocomplete + resolution. */
+export async function listClassMemberUsers(
+  classId: string,
+): Promise<ClassMemberUser[]> {
+  const rows = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      avatarUrl: users.avatarUrl,
+    })
+    .from(classMemberships)
+    .innerJoin(users, eq(users.id, classMemberships.userId))
+    .where(
+      and(
+        eq(classMemberships.classId, classId),
+        eq(classMemberships.status, "active"),
+      ),
+    )
+    .orderBy(asc(users.username));
+  return rows;
+}
+
 export async function requireActiveMembership(userId: string, classId: string) {
   const membership = await db.query.classMemberships.findFirst({
     where: (m, { and, eq }) =>

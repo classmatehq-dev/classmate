@@ -9,6 +9,7 @@ import { Avatar, Badge, cx } from "@/components/ui";
 import { api, ApiClientError } from "@/lib/api/client";
 import { classColor } from "@/lib/class-color";
 import type { FeedItemDto } from "@/lib/contracts/feed";
+import { renderBody } from "@/lib/mentions";
 import { relativeTime } from "@/lib/time";
 
 export type FeedPostData = FeedItemDto;
@@ -24,7 +25,24 @@ export function FeedPost({
   const [helpful, setHelpful] = useState(post.viewerHasMarkedHelpful);
   const [count, setCount] = useState(post.helpfulCount);
   const [pending, setPending] = useState(false);
+  const [saved, setSaved] = useState(post.viewerHasSaved);
   const c = classColor(post.class.id);
+
+  async function toggleSave() {
+    const next = !saved;
+    setSaved(next);
+    try {
+      const res = await api<{ saved: boolean }>(`/api/posts/${post.id}/save`, {
+        method: "POST",
+      });
+      setSaved(res.saved);
+    } catch (err) {
+      setSaved(!next);
+      if (err instanceof ApiClientError && err.status === 401) {
+        router.push("/login");
+      }
+    }
+  }
 
   async function toggleHelpful() {
     if (pending) return;
@@ -80,7 +98,12 @@ export function FeedPost({
                 <span aria-hidden>·</span>
               </>
             )}
-            <span>{relativeTime(post.createdAt)}</span>
+            <Link
+              href={`/post/${post.id}`}
+              className="hover:text-navy hover:underline"
+            >
+              {relativeTime(post.createdAt)}
+            </Link>
           </div>
         </div>
         {post.type === "question" && (
@@ -91,11 +114,11 @@ export function FeedPost({
       </div>
 
       {post.body && (
-        <Link href={`/post/${post.id}`} className="mt-3 block">
+        <div className="mt-3">
           <p className="whitespace-pre-wrap text-base leading-7 text-navy">
-            {post.body}
+            {renderBody(post.body, post.mentions)}
           </p>
-        </Link>
+        </div>
       )}
 
       {post.attachments.length > 0 && (
@@ -127,6 +150,31 @@ export function FeedPost({
             {post.commentCount === 1 ? "reply" : "replies"}
           </span>
         </Link>
+
+        <button
+          onClick={toggleSave}
+          aria-pressed={saved}
+          aria-label={saved ? "Remove from saved" : "Save post"}
+          className={cx(
+            "ml-auto inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 font-semibold transition-colors",
+            saved
+              ? "text-brand-blue"
+              : "text-muted hover:bg-background hover:text-navy",
+          )}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-4 w-4"
+            fill={saved ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
+          <span className="hidden sm:inline">{saved ? "Saved" : "Save"}</span>
+        </button>
       </div>
     </article>
   );

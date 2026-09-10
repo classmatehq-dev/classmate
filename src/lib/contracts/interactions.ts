@@ -64,9 +64,11 @@ export const postDto = z.object({
   helpfulCount: z.number().int().nonnegative(),
   commentCount: z.number().int().nonnegative(),
   viewerHasMarkedHelpful: z.boolean(),
+  viewerHasSaved: z.boolean(),
   isAuthor: z.boolean(),
   author: postAuthorDto,
   attachments: z.array(attachmentDto),
+  mentions: z.array(z.string()),
 });
 export type PostDto = z.infer<typeof postDto>;
 
@@ -108,6 +110,7 @@ export const commentDto = z.object({
   isAuthor: z.boolean(),
   author: postAuthorDto,
   attachments: z.array(attachmentDto),
+  mentions: z.array(z.string()),
 });
 export type CommentDto = z.infer<typeof commentDto>;
 

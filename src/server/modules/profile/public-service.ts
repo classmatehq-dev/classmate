@@ -17,7 +17,9 @@ import { ApiError } from "@/server/http/errors";
 import { normalizeUsername } from "@/server/lib/normalize";
 import { loadAttachmentsMap } from "@/server/modules/attachments/service";
 import { getHelpfulReceived } from "@/server/modules/interactions/service";
+import { loadMentionsMap } from "@/server/modules/mentions/service";
 import { notify } from "@/server/modules/notifications/service";
+import { loadSavedSet } from "@/server/modules/saves/query";
 
 async function loadByUsername(username: string) {
   const user = await db.query.users.findFirst({
@@ -149,10 +151,12 @@ export async function getProfilePosts(
     .orderBy(desc(posts.createdAt))
     .limit(30);
 
-  const attachmentsByPost = await loadAttachmentsMap(
-    "post",
-    rows.map((r) => r.post.id),
-  );
+  const postIds = rows.map((r) => r.post.id);
+  const [attachmentsByPost, mentionsByPost, savedSet] = await Promise.all([
+    loadAttachmentsMap("post", postIds),
+    loadMentionsMap("post", postIds),
+    loadSavedSet(viewerId, postIds),
+  ]);
 
   return rows.map((r) => ({
     id: r.post.id,
@@ -163,10 +167,12 @@ export async function getProfilePosts(
     helpfulCount: r.post.helpfulCount,
     commentCount: r.post.commentCount,
     viewerHasMarkedHelpful: Boolean(r.marked),
+    viewerHasSaved: savedSet.has(r.post.id),
     isAuthor: r.post.authorId === viewerId,
     author: { id: r.authorId, username: r.username, avatarUrl: r.avatarUrl },
     class: { id: r.classId, name: r.className, teacherName: r.teacherName },
     attachments: attachmentsByPost.get(r.post.id) ?? [],
+    mentions: mentionsByPost.get(r.post.id) ?? [],
   }));
 }
 

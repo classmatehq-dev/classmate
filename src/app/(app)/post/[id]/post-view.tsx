@@ -14,6 +14,7 @@ import {
   useDeletePost,
   usePost,
 } from "@/lib/api/hooks";
+import { renderBody } from "@/lib/mentions";
 import { relativeTime } from "@/lib/time";
 
 export function PostView({ postId }: { postId: string }) {
@@ -24,12 +25,29 @@ export function PostView({ postId }: { postId: string }) {
 
   const [helpful, setHelpful] = useState(false);
   const [count, setCount] = useState(0);
+  const [saved, setSaved] = useState(false);
   const [synced, setSynced] = useState(false);
 
   if (post.data && !synced) {
     setHelpful(post.data.viewerHasMarkedHelpful);
     setCount(post.data.helpfulCount);
+    setSaved(post.data.viewerHasSaved);
     setSynced(true);
+  }
+
+  async function toggleSave() {
+    if (!post.data) return;
+    const next = !saved;
+    setSaved(next);
+    try {
+      const res = await api<{ saved: boolean }>(
+        `/api/posts/${postId}/save`,
+        { method: "POST" },
+      );
+      setSaved(res.saved);
+    } catch {
+      setSaved(!next);
+    }
   }
 
   async function toggleHelpful() {
@@ -120,7 +138,7 @@ export function PostView({ postId }: { postId: string }) {
 
         {p.body && (
           <p className="mt-3 whitespace-pre-wrap text-base leading-7 text-navy">
-            {p.body}
+            {renderBody(p.body, p.mentions)}
           </p>
         )}
 
@@ -144,6 +162,29 @@ export function PostView({ postId }: { postId: string }) {
             💬 {p.commentCount}{" "}
             {p.commentCount === 1 ? "reply" : "replies"}
           </span>
+          <button
+            onClick={toggleSave}
+            aria-pressed={saved}
+            className={cx(
+              "inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 font-semibold transition-colors",
+              saved
+                ? "text-brand-blue"
+                : "text-muted hover:bg-background hover:text-navy",
+            )}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill={saved ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+            {saved ? "Saved" : "Save"}
+          </button>
           {p.isAuthor ? (
             <button
               onClick={async () => {
@@ -170,6 +211,7 @@ export function PostView({ postId }: { postId: string }) {
         ) : (
           <CommentThread
             postId={postId}
+            classId={p.classId}
             comments={comments.data ?? []}
             onChanged={() => {
               comments.refetch();
